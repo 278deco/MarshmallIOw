@@ -4,3 +4,39 @@
  * This is a general purpose Gradle build.
  * To learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.2-rc-2/samples
  */
+
+plugins {
+	id 'java-library'
+}
+
+ext {
+	project_name = 'MarshmallIOw'
+	project_version = "$version".toString()
+	
+	// Dependencies version
+	mariadb_version = '1.1.4'
+}
+
+allprojects {
+	apply plugin: 'java-library'
+	
+	sourceCompatibility = JavaVersion.VERSION_18
+	targetCompatibility = JavaVersion.VERSION_18
+	
+	repositories {
+		mavenCentral()
+	}
+	
+	dependencies {
+		api "org.mariadb:r2dbc-mariadb:$mariadb_version"
+	}
+	
+	 tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+    
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+}
