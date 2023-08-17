@@ -13,11 +13,11 @@ public class DBFactory {
 
 	private static volatile DBFactory instance;
 	private volatile DBCredentialsHolder credentialsHolder;
-	
+
 	private DBFactory(DBCredentials credentials) {
 		this.credentialsHolder = new DBCredentialsHolder(credentials);
 	}
-	
+
 	/**
 	 * Create the instance of {@link DBFactory} as a singleton
 	 * IF no instance is found, a new one is created<br>
@@ -30,10 +30,10 @@ public class DBFactory {
 				if(instance == null) instance = new DBFactory(credentials);
 			}
 		}
-		
+
 		return instance;
 	}
-	
+
 	/**
 	 * Get the instance of {@link DBFactory} as a singleton
 	 * IF no instance is found, {@code null} is returned
@@ -42,16 +42,16 @@ public class DBFactory {
 	public static DBFactory get() {
 		return instance;
 	}
-	
+
 	public <E extends DBTable> E getTable(Class<E> cls, DatabaseType type, boolean autoClose) {
 		E result;
-		
+
 		switch (type) {
 			case MARIADB -> {
 				try {
 					final Constructor<E> constructor = cls.getConstructor(DBImplementation.class);
 					final MariaDBImplementation implementation = new MariaDBImplementation(credentialsHolder.getMariaDBFactory(), autoClose);
-					
+
 					result = constructor.newInstance(implementation);
 				}catch(Exception e) {
 					result = null;
@@ -61,10 +61,10 @@ public class DBFactory {
 				result = null;
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	public <E extends DBTable> E getTable(Class<E> cls, DatabaseType type) {
 		return this.getTable(cls, type, true);
 	}
