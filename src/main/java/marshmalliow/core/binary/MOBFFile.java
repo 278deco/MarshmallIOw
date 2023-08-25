@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -71,7 +72,7 @@ public class MOBFFile {
 				try {
 					BufferedInputStream stream = new BufferedInputStream(Files.newInputStream(filePath));
 					
-					reader = new BinaryReader(determineCompression(stream));
+					reader = new BinaryReader(determineInputCompression(stream));
 	
 					this.fileHeader = new MOBFFileHeader(reader);
 					
@@ -91,30 +92,6 @@ public class MOBFFile {
 		this.readFile(false);
 	}
 	
-	private InputStream determineCompression(BufferedInputStream bis) throws IOException {
-		CompressionType compression = CompressionType.NONE;
-		bis.mark(0);
-
-		for(CompressionType ct : CompressionType.values()) {
-			if(ct != CompressionType.NONE) {
-				final byte[] sign = bis.readNBytes(ct.getSignatureLength());
-				bis.reset();
-				
-				if(Arrays.equals(sign, CompressionType.GZIP.getSignature())) {
-					compression = ct;
-					break;
-				}
-			}
-		}
-		
-		switch (compression) {
-			case GZIP:
-				return new GZIPInputStream(bis);
-			default:
-				return bis;
-		}
-	}
-	
 	public void writeFile(boolean forceWrite) throws IOException {
 		synchronized (lock) {
 			if(this.fileHeader == null || this.root == null) throw new IllegalStateException("Cannot write a MOBF file without an header or a content");
@@ -124,7 +101,7 @@ public class MOBFFile {
 				BinaryWriter writer = null;
 				try {
 					final BufferedOutputStream stream = new BufferedOutputStream(Files.newOutputStream(filePath));
-					writer = new BinaryWriter(this.compression == CompressionType.NONE ? stream : new GZIPOutputStream(stream));
+					writer = new BinaryWriter(determineOutputCompression(stream));
 					
 					this.fileHeader.write(writer);
 					
@@ -144,6 +121,39 @@ public class MOBFFile {
 	
 	public void writeFile() throws IOException {
 		this.writeFile(false);
+	}
+	
+	private InputStream determineInputCompression(BufferedInputStream bis) throws IOException {
+		CompressionType compression = CompressionType.NONE;
+		bis.mark(0);
+
+		for(CompressionType ct : CompressionType.values()) {
+			if(ct != CompressionType.NONE) {
+				final byte[] sign = bis.readNBytes(ct.getSignatureLength());
+				bis.reset();
+				
+				if(Arrays.equals(sign, ct.getSignature())) {
+					compression = ct;
+					break;
+				}
+			}
+		}
+		
+		switch (compression) {
+			case GZIP:
+				return new GZIPInputStream(bis);
+			default:
+				return bis;
+		}
+	}
+	
+	private OutputStream determineOutputCompression(BufferedOutputStream bis) throws IOException {
+		switch (this.compression) {
+			case GZIP:
+				return new GZIPOutputStream(bis);
+			default:
+				return bis;
+		}
 	}
 	
 	public boolean isOpen() {
