@@ -44,7 +44,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 				data.write(writer, registry, charset);
 			}
 			
-			this.isModified = false;
+			this.isModified.set(false);
 		}
 	}
 
@@ -59,7 +59,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 		
 		if(dataTypeClass == null) throw new IOException();
 		
-		this.isModified = false;
+		this.isModified.set(false);
 		
 		T readDataType;
 		for(int i = 0; i < size; i++) {
@@ -82,7 +82,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 
 	public boolean add(T data) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);
 			if(data.getName().isEmpty()) throw new MissingFormatArgumentException("Cannot add a DataType without a name");
 			return this.value.add(data);
 		}
@@ -91,7 +91,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 	@SuppressWarnings("unchecked")
 	public void add(T... datas) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);
 			for(T data : datas) {
 				if(data.getName().isEmpty()) throw new MissingFormatArgumentException("Cannot add a DataType without a name");
 				if(data instanceof T) this.value.add(data);
@@ -101,21 +101,21 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 	
 	public T get(int i) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);
 			return this.value.get(i);
 		}
 	}
 
 	public Optional<T> get(String name) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);
 			return this.value.stream().filter(data -> data.getName().isPresent() && data.getName().get().equals(name)).findFirst();
 		}
 	}
 	
 	public boolean remove(T data) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);
 			return this.value.remove(data);
 		}
 	}

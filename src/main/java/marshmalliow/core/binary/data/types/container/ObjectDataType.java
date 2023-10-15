@@ -42,14 +42,14 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 
 		writer.writeByte((byte)0);
 		
-		this.isModified = false;
+		this.isModified.set(false);;
 	}
 
 	@Override
 	public void readValue(BinaryReader reader, DataTypeRegistry registry, Charset charset) throws IOException {
 		final Map<String, DataType<?>> data = new LinkedHashMap<>();
 
-		this.isModified = false;
+		this.isModified.set(false);;
 		
 		byte readByte;
 		DataType<?> readDataType;
@@ -78,7 +78,7 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 	
 	public boolean add(DataType<?> data) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);;
 			if(data.getName().isEmpty()) throw new MissingFormatArgumentException("Cannot add a DataType without a name");
 			return this.value.put(data.getName().get(), data) == null;
 		}
@@ -86,7 +86,7 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 	
 	public void add(DataType<?>... datas) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);;
 			for(DataType<?> data : datas) {
 				if(data.getName().isEmpty()) throw new MissingFormatArgumentException("Cannot add a DataType without a name");
 				this.value.put(data.getName().get(), data);
@@ -96,14 +96,14 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 	
 	public DataType<?> get(String name) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);;
 			return this.value.get(name);
 		}
 	}
 	
 	public boolean remove(DataType<?> data) {
 		synchronized (lock) {
-			this.isModified = true;
+			this.isModified.set(true);;
 			return this.value.remove(data.getName(), data);
 		}
 	}

@@ -3,6 +3,7 @@ package marshmalliow.core.binary.data.types;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import marshmalliow.core.binary.io.BinaryReader;
 import marshmalliow.core.binary.io.BinaryWriter;
@@ -15,20 +16,20 @@ public abstract class DataType<T> {
 	
 	protected Optional<String> name;
 	protected T value;
-	protected boolean isModified;
+	protected final AtomicBoolean isModified = new AtomicBoolean(false);
 
 	public DataType(String name, T value) {
 		Objects.requireNonNull(value);
 		this.name = Optional.of(name);
 		this.value = value;
-		this.isModified = true;
+		this.isModified.set(true);
 	}
 	
 	public DataType(T value) {
 		Objects.requireNonNull(value);
 		this.name = Optional.empty();
 		this.value = value;
-		this.isModified = true;
+		this.isModified.set(true);
 	}
 
 	public DataType() {
@@ -37,12 +38,12 @@ public abstract class DataType<T> {
 	}
 
 	public void write(BinaryWriter writer, DataTypeRegistry registry, Charset charset) throws IOException {
-		this.isModified = false;
+		this.isModified.set(false);
 		writeValue(writer, registry, charset);
 	}
 
 	public void read(BinaryReader reader, DataTypeRegistry registry, Charset charset) throws IOException {
-		this.isModified = false;
+		this.isModified.set(false);
 		readValue(reader, registry, charset);
 	}
 	
@@ -55,7 +56,7 @@ public abstract class DataType<T> {
 	}
 
 	public final void setValue(T value) {
-		this.isModified = true;
+		this.isModified.set(true);
 		this.value = value;
 	}
 
@@ -84,7 +85,7 @@ public abstract class DataType<T> {
 	 * @return the value of modified field
 	 */
 	public boolean isModified() {
-		return isModified;
+		return this.isModified.get();
 	}
 
 	@Override
