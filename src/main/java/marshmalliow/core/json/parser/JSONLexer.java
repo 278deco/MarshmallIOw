@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.Objects;
 
+import marshmalliow.core.json.exceptions.JSONParseException;
 import marshmalliow.core.json.objects.JSONToken;
 import marshmalliow.core.json.utils.JSONTokenEnum;
 

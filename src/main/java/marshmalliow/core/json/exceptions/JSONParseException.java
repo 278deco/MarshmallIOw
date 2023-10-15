@@ -1,4 +1,4 @@
-package marshmalliow.core.json.parser;
+package marshmalliow.core.json.exceptions;
 
 import java.io.IOException;
 

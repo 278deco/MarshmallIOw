@@ -1,5 +1,6 @@
-package marshmalliow.core.json.parser;
+package marshmalliow.core.json.io;
 
+import java.util.Map;
 import java.util.Objects;
 
 import marshmalliow.core.json.objects.JSONArray;
@@ -7,14 +8,15 @@ import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.json.utils.JSONTokenEnum;
 
-public class JSONWriter {
+@Deprecated
+public class JSONStringWriter {
 	
 	private JSONContainer source;	
 	private StringBuilder result; //Using StringBuilder because the write function is sync
 	
 	private boolean prettyPrinter;
 
-	public JSONWriter(JSONContainer source) {
+	public JSONStringWriter(JSONContainer source) {
 		this.source = Objects.requireNonNull(source);
 		this.result = new StringBuilder();
 	}
@@ -24,6 +26,8 @@ public class JSONWriter {
 	}
 	
 	public synchronized String writeToString() {
+		if(!this.result.isEmpty()) return result.toString();
+		
 		if(this.source instanceof JSONObject) {
 			writeObject((JSONObject)this.source, 0);
 		}else if(this.source instanceof JSONArray) {
@@ -34,10 +38,12 @@ public class JSONWriter {
 	}
 	
 	private void writeObject(JSONObject obj, int depth) {
-		result.append(JSONTokenEnum.LEFT_BRACE.getStringToken()+(prettyPrinter ? "\n" : ""));
+		result.append(JSONTokenEnum.LEFT_BRACE.getStringToken());
 		
-		obj.forEach((key, value) -> {
-			result.append("\""+key+"\":");
+		int i = 0;
+		for(Map.Entry<String, Object> entry : obj.entrySet()) {
+			result.append("\""+entry.getKey()+"\":");
+			final Object value = entry.getValue();
 			if(value instanceof JSONArray) {
 				writeArray(((JSONArray)value), depth+1);
 			}else if(value instanceof JSONObject) {
@@ -45,21 +51,20 @@ public class JSONWriter {
 			}else {
 				result.append(writeValue(value));
 			}
-			result.append(","+(prettyPrinter ? "\n" : ""));
-		});
-		if(prettyPrinter) {
-			result.setLength(result.length()-2);
-			result.append((prettyPrinter ? "\n" : "")+JSONTokenEnum.RIGHT_BRACE.getStringToken());
+			
+			i+=1;
+			if(i < obj.size()) result.append(',');
 		}
-		else {
-			result.setCharAt(result.length()-1, JSONTokenEnum.RIGHT_BRACE.getStringToken().charAt(0));
-		}
+
+		result.append(JSONTokenEnum.RIGHT_BRACE.getStringToken());
 	}
 	
 	private void writeArray(JSONArray obj, int depth) {
-		result.append(JSONTokenEnum.LEFT_BRACKET.getStringToken()+(prettyPrinter ? "\n" : ""));
+		result.append(JSONTokenEnum.LEFT_BRACKET.getStringToken());
 		
-		obj.forEach(element -> {
+		for(int i = 0; i < obj.size(); i++) {
+			final Object element = obj.get(i);
+			
 			if(element instanceof JSONArray) {
 				writeArray(((JSONArray)element), depth+1);
 			}else if(element instanceof JSONObject) {
@@ -67,16 +72,10 @@ public class JSONWriter {
 			}else {
 				result.append(writeValue(element));
 			}
-			result.append(","+(prettyPrinter ? "\n" : ""));
-		});
+			if(i < obj.size()-1) result.append(',');
+		};
 		
-		if(prettyPrinter) {
-			result.setLength(result.length()-2);
-			result.append((prettyPrinter ? "\n" : "")+JSONTokenEnum.RIGHT_BRACKET.getStringToken());
-		}
-		else {
-			result.setCharAt(result.length()-1, JSONTokenEnum.RIGHT_BRACKET.getStringToken().charAt(0));
-		}
+		result.append(JSONTokenEnum.RIGHT_BRACKET.getStringToken());
 	}
 	
 	private String writeValue(Object value) {

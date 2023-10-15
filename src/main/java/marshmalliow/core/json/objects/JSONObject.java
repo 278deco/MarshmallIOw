@@ -96,11 +96,13 @@ public class JSONObject extends ConcurrentHashMap<String, Object> implements JSO
 		super.clear();
 	}
 
+	@Override
 	public void setContentModified(boolean value) {
 		this.contentModified.set(value);
 	}
 	
-	public boolean isContentModified() {
+	@Override
+	public boolean isModified() {
 		return this.contentModified.get();
 	}
 	
