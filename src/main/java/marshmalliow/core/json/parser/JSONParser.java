@@ -1,5 +1,6 @@
 package marshmalliow.core.json.parser;
 
+import marshmalliow.core.json.exceptions.JSONDepthException;
 import marshmalliow.core.json.exceptions.JSONParseException;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
@@ -9,6 +10,8 @@ import marshmalliow.core.json.utils.JSONTokenEnum;
 
 public class JSONParser {
 
+	public static final int MAXIMUM_DEPTH = 512;
+	
 	/**
 	 * State machine
 	 */
@@ -56,6 +59,8 @@ public class JSONParser {
 	}
 	
 	private JSONObject parseObject(int depth) throws JSONParseException {
+		if(depth > MAXIMUM_DEPTH) throw new JSONDepthException();
+		
 		final JSONObject obj = new JSONObject();
 		
 		JSONToken token;
@@ -116,6 +121,8 @@ public class JSONParser {
 	}
 	
 	private JSONArray parseArray(int depth) throws JSONParseException {
+		if(depth > MAXIMUM_DEPTH) throw new JSONDepthException();
+		
 		final JSONArray arr = new JSONArray();
 		
 		JSONTokenEnum arrayType = null;
