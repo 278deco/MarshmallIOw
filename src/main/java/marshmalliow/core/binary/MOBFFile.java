@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -18,14 +17,16 @@ import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;
+import marshmalliow.core.objects.Directory;
+import marshmalliow.core.objects.FileType;
+import marshmalliow.core.objects.IOClass;
 
-public class MOBFFile {
+public class MOBFFile extends IOClass {
 
 	private static final String EXTENSION = ".mobf";
 	
 	private final Object lock = new Object();
 	
-	private Path filePath;
 	private MOBFFileHeader fileHeader;
 	private CompressionType compression;
 	private DataTypeRegistry registry;
@@ -34,16 +35,14 @@ public class MOBFFile {
 	
 	private ObjectDataType root;
 	
-	public MOBFFile(Path filePath, String fileName, DataTypeRegistry registry) {
-		if(!Files.isDirectory(filePath) && (fileName.isBlank() || fileName.isEmpty())) throw new IllegalArgumentException();
-		this.filePath = filePath.resolve(fileName+EXTENSION);
+	public MOBFFile(Directory fileDir, String fileName, DataTypeRegistry registry) {
+		super(fileDir, fileName);
 		this.registry = registry;
 		this.isOpen = false;
 	}
 	
-	public MOBFFile(Path filePath, String fileName, DataTypeRegistry registry, MOBFFileHeader header, CompressionType compression, ObjectDataType root) {
-		if(!Files.isDirectory(filePath) && (fileName.isBlank() || fileName.isEmpty())) throw new IllegalArgumentException();
-		this.filePath = filePath.resolve(fileName+EXTENSION);
+	public MOBFFile(Directory fileDir, String fileName, DataTypeRegistry registry, MOBFFileHeader header, CompressionType compression, ObjectDataType root) {
+		super(fileDir, fileName);
 		this.compression = compression;
 		this.registry = registry;
 		this.fileHeader = header;
@@ -52,26 +51,28 @@ public class MOBFFile {
 		this.isOpen = true;
 	}
 	
-	public MOBFFile(Path filePath, String fileName, DataTypeRegistry registry, MOBFFileHeader header, CompressionType compression) {
-		this(filePath, fileName, registry, header, compression, new ObjectDataType());
+	public MOBFFile(Directory fileDir, String fileName, DataTypeRegistry registry, MOBFFileHeader header, CompressionType compression) {
+		this(fileDir, fileName, registry, header, compression, new ObjectDataType());
 	}
 	
-	public MOBFFile(Path filePath, String fileName, DataTypeRegistry registry, MOBFFileHeader header, ObjectDataType root) {
-		this(filePath, fileName, registry, header, CompressionType.NONE, root);
+	public MOBFFile(Directory fileDir, String fileName, DataTypeRegistry registry, MOBFFileHeader header, ObjectDataType root) {
+		this(fileDir, fileName, registry, header, CompressionType.NONE, root);
 	}
 	
-	public MOBFFile(Path filePath, String fileName, DataTypeRegistry registry, MOBFFileHeader header) {
-		this(filePath, fileName, registry, header, CompressionType.NONE, new ObjectDataType());
+	public MOBFFile(Directory fileDir, String fileName, DataTypeRegistry registry, MOBFFileHeader header) {
+		this(fileDir, fileName, registry, header, CompressionType.NONE, new ObjectDataType());
 	}
 	
+	@Override
 	public void readFile(boolean forceRead) throws IOException {
 		synchronized (lock) {
 			// True if we force the overwriting of the loaded data or the document hasn't been opened
 			if(forceRead || !this.isOpen) {
 				BinaryReader reader = null;
+				BufferedInputStream stream = null;
 				try {
-					BufferedInputStream stream = new BufferedInputStream(Files.newInputStream(filePath));
-					
+					stream = new BufferedInputStream(Files.newInputStream(getFullPath()));
+							
 					reader = new BinaryReader(determineInputCompression(stream));
 	
 					this.fileHeader = new MOBFFileHeader(reader);
@@ -83,6 +84,7 @@ public class MOBFFile {
 					this.isOpen = true;
 				}finally {
 					if(reader != null) reader.close();
+					if(stream != null) stream.close();
 				}
 			}
 		}
@@ -92,15 +94,17 @@ public class MOBFFile {
 		this.readFile(false);
 	}
 	
-	public void writeFile(boolean forceWrite) throws IOException {
+	@Override
+	public void saveFile(boolean forceWrite) throws IOException {
 		synchronized (lock) {
 			if(this.fileHeader == null || this.root == null) throw new IllegalStateException("Cannot write a MOBF file without an header or a content");
 			
 			// True if we force the overwriting of the loaded data or the document hasn't been opened
 			if(this.isOpen && (forceWrite || this.root.isModified())) {
 				BinaryWriter writer = null;
+				BufferedOutputStream stream = null;
 				try {
-					final BufferedOutputStream stream = new BufferedOutputStream(Files.newOutputStream(filePath));
+					stream = new BufferedOutputStream(Files.newOutputStream(getFullPath()));
 					writer = new BinaryWriter(determineOutputCompression(stream));
 					
 					this.fileHeader.write(writer);
@@ -114,13 +118,17 @@ public class MOBFFile {
 						writer.flush();
 						writer.close();
 					}
+					if(stream != null) {
+						stream.flush();
+						stream.close();
+					}
 				}
 			}
 		}
 	}
 	
-	public void writeFile() throws IOException {
-		this.writeFile(false);
+	public void saveFile() throws IOException {
+		this.saveFile(false);
 	}
 	
 	private InputStream determineInputCompression(BufferedInputStream bis) throws IOException {
@@ -162,5 +170,15 @@ public class MOBFFile {
 	
 	public ObjectDataType getRoot() {
 		return root;
+	}
+
+	@Override
+	public FileType getFileType() {
+		return FileType.MOBF;
+	}
+
+	@Override
+	public String getFullName() {
+		return this.fileName+EXTENSION;
 	}
 }

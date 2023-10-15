@@ -1,74 +1,121 @@
 package marshmalliow.core.json;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
+import marshmalliow.core.json.io.JSONWriter;
+import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
+import marshmalliow.core.json.objects.JSONObject;
+import marshmalliow.core.json.parser.JSONLexer;
+import marshmalliow.core.json.parser.JSONParser;
+import marshmalliow.core.objects.Directory;
+import marshmalliow.core.objects.FileType;
+import marshmalliow.core.objects.IOClass;
 
-public class JSONFile {
+public class JSONFile extends IOClass {
 	
-	private String name;
-	private Path path;
 	private JSONContainer content;
 	
-	public JSONFile(Path path, String name, JSONContainer content) {
-		if(!Files.isDirectory(path)) throw new IllegalArgumentException("Cannot define a non directory path for a json file");
-		
-		this.path = path;
-		this.name = name;
+	private final Object mutex = new Object();
+	
+	private boolean isOpen;
+	
+	public JSONFile(Directory dir, String name, JSONContainer content) {
+		super(dir, name);
 		this.content = content;
+		this.isOpen = true;
 	}
 	
-	public JSONFile(Path path, String name) {
-		this(path, name, null);
-	}
-	
-	public JSONFile(Path path, JSONContainer content) {
-		if(!Files.isRegularFile(path)) throw new IllegalArgumentException("Cannot define a non file path for a json file");
-		
-		this.path = path.getParent();
-		this.name = path.getFileName().toString();
-		this.content = content;
-	}
-	
-	public JSONFile(Path path) {
-		if(!Files.isRegularFile(path)) throw new IllegalArgumentException("Cannot define a non file path for a json file");
-		
-		this.path = path.getParent();
-		this.name = path.getFileName().toString();
+	public JSONFile(Directory dir, String name) {
+		super(dir, name);
 		this.content = null;
+		this.isOpen = false;
 	}
 	
-	public synchronized void reset() {
-		this.content = null;
+	@Override
+	public void readFile(boolean forceRead) throws IOException {
+		synchronized (mutex) {
+			if(forceRead || !this.isOpen) {
+				BufferedReader reader = null;
+				try {
+					reader = Files.newBufferedReader(getFullPath());
+					
+					final JSONParser parser = new JSONParser(new JSONLexer(reader));
+					
+					this.content = parser.parse();
+				}finally {
+					if(reader != null) reader.close();
+				}
+				
+			}
+		}
 	}
 	
-	public Path getPath() {
-		return path;
+	public void readFile() throws IOException {
+		this.readFile(false);
+	}
+
+	@Override
+	public void saveFile(boolean forceSave) throws IOException {
+		synchronized (mutex) {
+			if(this.isOpen && (forceSave || this.content.isModified())) {
+				BufferedWriter writer = null;
+				try {
+					writer = Files.newBufferedWriter(getFullPath());
+					
+					final JSONWriter jsonWriter = new JSONWriter(this.content);
+					jsonWriter.write(writer);
+				}finally {
+					if(writer != null) {
+						writer.flush();
+						writer.close();
+					}
+				}
+				
+			}
+		}
 	}
 	
-	public Path getFullPath() {
-		return path.resolve(getFullName());
+	public void saveFile() throws IOException {
+		this.saveFile(false);
 	}
 	
-	public synchronized void setPath(Path path) {
-		if(!Files.isDirectory(path)) throw new IllegalArgumentException("Cannot define a non directory path for a json file");
-		this.path = path;
+	public void reset() {
+		synchronized (mutex) {
+			this.content = null;			
+		}
 	}
 	
-	public String getName() {
-		return name;
-	}
-	
-	public String getFullName() {
-		return name+".json";
-	}
-	
-	public synchronized void setName(String name) {
-		this.name = name;
+	public void setPath(Directory dir) {
+		synchronized (mutex) {
+			this.directory = dir;
+		}
 	}
 	
 	public JSONContainer getContent() {
 		return content;
+	}
+	
+	public JSONObject getContentAsObject() {
+		if(this.content instanceof JSONObject) return (JSONObject) this.content;
+		else return null;
+	}
+	
+	public JSONArray getContentAsArray() {
+		if(this.content instanceof JSONArray) return (JSONArray) this.content;
+		else return null;
+	}
+	
+	@Override
+	public String getFullName() {
+		return this.fileName+".json";
+	}
+
+	@Override
+	public FileType getFileType() {
+		return FileType.JSON;
 	}
 }
