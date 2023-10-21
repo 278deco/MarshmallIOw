@@ -12,9 +12,13 @@ plugins {
 ext {
 	project_name = 'MarshmallIOw'
 	project_version = "$version".toString()
+	project_description = "Easy-to-use library handling files for multiple purposes"
+	group_id = "com.marshmalliow"
 	
 	// Dependencies version
 	mariadb_version = '1.1.4'
+	log4j_version = '2.20.0'
+	junit_version = '5.10.0'
 }
 
 allprojects {
@@ -22,6 +26,10 @@ allprojects {
 	
 	sourceCompatibility = JavaVersion.VERSION_18
 	targetCompatibility = JavaVersion.VERSION_18
+	
+	group = group_id
+	version = project_version
+	description = project_description
 	
 	repositories {
 		mavenCentral()
@@ -32,14 +40,14 @@ allprojects {
 		
 		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
 		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
-		implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
-		implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
+		implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
+		implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
 		
 		// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-		implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.2'
+		//  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.2'
 		
 		// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-		testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.0'
+		testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
 	}
 	
 	 tasks.withType(JavaCompile) {
