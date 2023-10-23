@@ -7,13 +7,15 @@
 
 plugins {
 	id 'java-library'
+	id 'maven-publish'
 }
 
 ext {
 	project_name = 'MarshmallIOw'
 	project_version = "$version".toString()
 	project_description = "Easy-to-use library handling files for multiple purposes"
-	group_id = "com.marshmalliow"
+	group_id = "fr.278deco"
+	artifact_id = 'marshmalliow'
 	
 	// Dependencies version
 	mariadb_version = '1.1.4'
@@ -22,8 +24,6 @@ ext {
 }
 
 allprojects {
-	apply plugin: 'java-library'
-	
 	sourceCompatibility = JavaVersion.VERSION_18
 	targetCompatibility = JavaVersion.VERSION_18
 	
@@ -52,10 +52,61 @@ allprojects {
 	
 	 tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
+        options.incremental = true
+    }
+    
+    tasks.withType(Javadoc) {
+    	options.encoding = 'UTF-8'
+    	if(JavaVersion.current().isJava9Compatible()) {
+        	options.addBooleanOption('html5', true)
+    	}
     }
     
     java {
         withJavadocJar()
         withSourcesJar()
     }
+    
+    publishing {
+    	publications {
+    		mavenJava(MavenPublication) {
+    			groupId = group_id
+    			artifactId = artifact_id
+    			version = project_version
+    		
+    			from components.java
+    			
+    			pom {
+    				name = 'MarshmallIOw'
+    				description = 'Easy-to-use library handling files for multiple purposes'
+    				url = 'https://github.com/278deco/MarshmallIOw'
+    				licenses {
+    					license {
+    						name = "LGPLv3"
+    						url = "https://github.com/278deco/MarshmallIOw/blob/main/LICENCE"
+    					}
+    				}
+    				developers {
+    					developer {
+    						name = '278deco'
+    					}
+    				}
+    			}
+    			
+    			versionMapping {
+	                usage('java-api') {
+	                    fromResolutionOf('runtimeClasspath')
+	                }
+	                usage('java-runtime') {
+	                    fromResolutionResult()
+	                }
+	            }
+	            
+    		}
+    	}
+    	
+    	
+    	
+    }
+    
 }
