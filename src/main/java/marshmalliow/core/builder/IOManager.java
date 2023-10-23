@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import marshmalliow.core.binary.MOBFFile;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.exceptions.FileNotLoadedException;
+import marshmalliow.core.file.TextFile;
 import marshmalliow.core.json.JSONFile;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONObject;
@@ -38,12 +39,8 @@ public class IOManager {
 	/**
 	 * Create a new instance of {@link IOManager} as a singleton<br>
 	 * If the instance already exist return the existing instance
-	 * @param directories A set of directories
-	 * @param configurationDirectory the directory of the configuration file
-	 * @param configuration the class representing the configuration
+	 * @param directoryManager An instance of {@link DirectoryManager}
 	 * @return the instance of IOManager
-	 * @see DirectoryManager
-	 * @see JSONProperty
 	 */
 	public static IOManager createInstance(DirectoryManager directoryManager) {
 		if(instance == null) {
@@ -168,6 +165,51 @@ public class IOManager {
 		return createNewMOBFFile(this.directoryManager.getLoadedDirectory(directoryID), fileName, registry);
 	}
 	
+	public <E extends IOClass> E createNewTextFile(Directory directory, String fileName, Class<E> element) {
+		synchronized (mutex) {	
+			if(!element.isInstance(TextFile.class)) {
+				LOGGER.error("The IO class provided is not an instance of TextFile class.");
+				return null;
+			}
+			if(directory != null && fileName != null) {
+				try {
+					final Constructor<E> constructor = element.getConstructor(Directory.class, String.class);
+					
+					final E obj = constructor.newInstance(directory, fileName);
+					
+					if(obj != null) {
+						this.files.putIfAbsent(obj.hashCode(), obj);
+						return obj;
+					}
+				} catch (NoSuchMethodException | IllegalArgumentException | SecurityException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+					LOGGER.error("Unexpected error while loading "+element.getSimpleName()+".",e);
+				}
+			}
+			
+			return null;
+		}
+	}
+	
+	public <E extends IOClass> E createNewTextFile(String directoryID, String fileName,  Class<E> element) {
+		return createNewTextFile(this.directoryManager.getLoadedDirectory(directoryID), fileName, element);
+	}
+	
+	public TextFile createNewTextFile(Directory directory, String fileName) {
+		synchronized (mutex) {
+			if(directory != null && fileName != null) {
+				final TextFile result = new TextFile(directory, fileName);
+				this.files.putIfAbsent(result.hashCode(), result);
+				
+				return result;
+			}
+			return null;
+		}
+	}
+	
+	public TextFile createNewTextFile(String directoryID, String fileName) {
+		return createNewTextFile(this.directoryManager.getLoadedDirectory(directoryID), fileName);
+	}
+	
 	/**
 	 * Save all files in this IOManager instance
 	 * @throws Exception
@@ -204,11 +246,10 @@ public class IOManager {
 	 * before removing it from the list<br>
 	 * The file to be removed must be a file represented by its own class in the program
 	 * @param <E> a file instance who extends IOElement
-	 * @param element the file's class
 	 * @return this instance of IOManager
 	 * @throws Exception
 	 */
-	public <E extends IOClass> IOManager safeRemoveFile(Class<E> element) throws Exception {
+	public <E extends IOClass> IOManager safeRemove(Class<E> element) throws Exception {
 		synchronized (mutex) {	
 			final int id = element.hashCode();
 			if(this.files.containsKey(id)) {
@@ -226,7 +267,6 @@ public class IOManager {
 	 * Hard remove means that any change made to the original file that are not saved will be erased<br>
 	 * The file to be removed must be a file represented by its own class in the program
 	 * @param <E> a file instance who extends IOElement
-	 * @param element the file's class
 	 * @return this instance of IOManager
 	 */
 	public synchronized <E extends IOClass> IOManager hardRemove(Class<E> element) {
@@ -240,7 +280,6 @@ public class IOManager {
 	/**
 	 * Get the instance of a file
 	 * @param <E> a file instance who extends IOElement
-	 * @param elementClass the file's class
 	 * @return the instance of the file saved in the list
 	 */
 	public <E extends IOClass> E get(Class<E> element) {
