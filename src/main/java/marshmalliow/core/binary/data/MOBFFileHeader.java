@@ -11,7 +11,7 @@ import marshmalliow.core.exceptions.MalformedHeaderException;
 public class MOBFFileHeader {
 
 	/**
-	 * Official signature for the MOBF File Format</br>
+	 * Official signature for the MOBF File Format<br/>
 	 * Cannot recognize a file if the signature isn't present or corruped
 	 */
 	private static final byte[] MOBF_FILE_SIGNATURE = {0x53, 0x54, 0x50, 0x43};

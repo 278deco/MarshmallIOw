@@ -32,7 +32,7 @@ public class JSONLexer {
 	}
 	
 	/**
-	 * Increase the buffer reading position (index).</br>
+	 * Increase the buffer reading position (index).<br/>
 	 * If the reading position is greater than the buffer size, refilled the buffer with new data
 	 * @param number the number to be added to the buffer reading position
 	 * @return If the buffer has been refilled when the reading position increased

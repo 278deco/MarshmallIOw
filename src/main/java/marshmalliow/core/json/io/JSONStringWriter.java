@@ -14,6 +14,7 @@ public class JSONStringWriter {
 	private JSONContainer source;	
 	private StringBuilder result; //Using StringBuilder because the write function is sync
 	
+	@SuppressWarnings("unused")
 	private boolean prettyPrinter;
 
 	public JSONStringWriter(JSONContainer source) {

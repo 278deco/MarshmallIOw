@@ -35,12 +35,12 @@ public class MariaDBImplementation extends DBImplementation {
 	}
 
 	/**
-	 * Create a new statement for building a statement-based request. </br>
+	 * Create a new statement for building a statement-based request. <br/>
 	 * <strong>This method do not close the connection after return</strong>
 	 * @param request the SQL of the statement
 	 * @return a new {@link Statement} instance
 	 * @throws SQLException
-	 * @see {@link MariadbConnection#createStatement(String)}
+	 * @see MariadbConnection#createStatement(String)
 	 */
 	public MariadbStatement createStatement(String request) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
