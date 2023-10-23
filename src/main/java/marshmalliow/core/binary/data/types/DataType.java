@@ -10,7 +10,7 @@ import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
 
-public abstract class DataType<T> {
+public abstract class DataType<T> implements RegisteredDataType {
 
 	public static enum Category { PRIMITIVE, CONTAINER, ADVANCED }
 	
@@ -73,15 +73,15 @@ public abstract class DataType<T> {
 	}
 	
 	/**
-	 * Tell if the data stored has been modified and isn't saved</br>
+	 * Tell if the data stored has been modified and isn't saved<br/>
 	 * The field is updated in the following situations :
 	 * <ul>
 	 * <li>By default when creating a new {@link DataType}, the object is defined as modified</li>
-	 * <li>When calling {@link DataType#read(BinaryReader, DataTypeRegistry)}, the data is considered in pair with the saved data, therefore not modified</li>
-	 * <li>When calling {@link DataType#write(BinaryWriter, DataTypeRegistry)} the data is considered as saved, therefore no longer modified</li>
+	 * <li>When calling {@link DataType#read(BinaryReader, DataTypeRegistry, Charset)}, the data is considered in pair with the saved data, therefore not modified</li>
+	 * <li>When calling {@link DataType#write(BinaryWriter, DataTypeRegistry, Charset)} the data is considered as saved, therefore no longer modified</li>
 	 * <li>Every methods that modify the data will set the field to true</li>
 	 * </ul>
-	 * </br>
+	 * <br/>
 	 * @return the value of modified field
 	 */
 	public boolean isModified() {

@@ -4,18 +4,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import marshmalliow.core.binary.data.types.DataType;
+import marshmalliow.core.binary.data.types.RegisteredDataType;
 import marshmalliow.core.exceptions.DatatypeRegistryException;
 
 public class DataTypeRegistry {
 
-	private final Map<Byte, Class<? extends DataType<?>>> registry;
+	private final Map<Byte, Class<? extends RegisteredDataType>> registry;
 
 	private DataTypeRegistry(DataTypeRegistry.Builder builder) {
 		this.registry = builder.registry;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Class<? extends DataType<?>> getDataTypeByID(byte id) {
-		return this.registry.get(id);
+		final Class<? extends RegisteredDataType> result = this.registry.get(id);
+		
+		return result != null && result.isInstance(DataType.class) ? (Class<? extends DataType<?>>) result : null;
 	}
 
 	public static DataTypeRegistry.Builder builder() {
@@ -24,11 +28,11 @@ public class DataTypeRegistry {
 
 	public static final class Builder {
 
-		private final Map<Byte, Class<? extends DataType<?>>> registry = new HashMap<>();
+		private final Map<Byte, Class<? extends RegisteredDataType>> registry = new HashMap<>();
 
 		private Builder() { }
 
-		public void register(byte id, Class<? extends DataType<?>> cls) throws DatatypeRegistryException {
+		public void register(byte id, Class<? extends RegisteredDataType> cls) throws DatatypeRegistryException {
 			if(!DataType.class.isAssignableFrom(cls) || (id == 0)) throw new DatatypeRegistryException("");
 			if(this.registry.containsKey(id)) throw new DatatypeRegistryException();
 

@@ -1,6 +1,5 @@
 package marshmalliow.core.binary.registry;
 
-import marshmalliow.core.binary.data.types.DataType;
 import marshmalliow.core.binary.data.types.advanced.DatetimeDataType;
 import marshmalliow.core.binary.data.types.advanced.StringDataType;
 import marshmalliow.core.binary.data.types.container.ArrayDataType;
@@ -40,7 +39,6 @@ public enum DataTypeEnum {
 		return id;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static DataTypeRegistry.Builder createNewRegistry() throws DatatypeRegistryException {
 		final DataTypeRegistry.Builder builder = DataTypeRegistry.builder();
 
@@ -54,8 +52,8 @@ public enum DataTypeEnum {
 		builder.register(DOUBLE.getId(), DoubleDataType.class);
 		builder.register(STRING.getId(), StringDataType.class);
 		builder.register(DATETIME.getId(), DatetimeDataType.class);
-		builder.register(LIST.getId(), (Class<? extends DataType<?>>) ListDataType.class);
-		builder.register(ARRAY.getId(), (Class<? extends DataType<?>>) ArrayDataType.class);
+		builder.register(LIST.getId(), ListDataType.class);
+		builder.register(ARRAY.getId(), ArrayDataType.class);
 
 		return builder;
 	}
