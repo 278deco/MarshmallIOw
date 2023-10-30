@@ -32,11 +32,8 @@ public class TextFile extends IOClass {
 	
 	/**
 	 * Create new TextFile instance
-	 * @param args arguments required by the TextFile class
-	 * <p><strong>Required arguments :</strong><br>
-	 * - The textfile's path<br>
-	 * - The textfile's name</p>
-	 * @throws IOException
+	 * @param dir The directory of the TextFile
+	 * @param name The name of the file <strong>without extension</strong>
 	 */
 	public TextFile(Directory dir, String name) {
 		super(dir, name);
@@ -57,7 +54,6 @@ public class TextFile extends IOClass {
 	/**
 	 * Read and add all file's content in a list
 	 * @param forceRead Isn't used in this function
-	 * @return true if the file has been read successfully
 	 */
 	@Override
 	public void readFile(boolean forceRead) {
@@ -94,7 +90,6 @@ public class TextFile extends IOClass {
 	 * Write all lines contained in the list to the disk<br>
 	 * This method will always return true as the file is saved in his own thread
 	 * @param forceSave Isn't used in this function
-	 * @return true
 	 */
 	@Override
 	public void saveFile(boolean forceSave) {
@@ -134,9 +129,9 @@ public class TextFile extends IOClass {
 
 	/**
 	 * Add a new line to content of the file<br>
-	 * If the file is never saved, the line while only be added to this instance of the TextFileManager
+	 * If the file is never saved, the line while only be added to this instance of the TextFile
 	 * @param lines all the line which needs to added
-	 * @see fr.o278deco.devbot.file.TextFileManager#saveTextFile()
+	 * @see #saveFile()
 	 */
 	public void addNewLine(String... lines) {
 		for(String line : lines) {

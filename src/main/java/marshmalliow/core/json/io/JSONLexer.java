@@ -1,4 +1,4 @@
-package marshmalliow.core.json.parser;
+package marshmalliow.core.json.io;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -9,11 +9,15 @@ import marshmalliow.core.json.exceptions.JSONParseException;
 import marshmalliow.core.json.objects.JSONToken;
 import marshmalliow.core.json.utils.JSONTokenEnum;
 
+/**
+ * JSONLexer purpose is to read a JSON file and produce {@link JSONToken}, checking for syntaxes errors.<br/>
+ * <em>See RFC 4627 and RFC 8259.</em>
+ * @see JSONParser
+ * @author 278deco
+ * @version 1.0.0
+ */
 public class JSONLexer {
-	
-	/**
-	 * State machine
-	 */
+
 	private static final char[] TRUE_PATTERN = {'t','r','u','e'};
 	private static final char[] FALSE_PATTERN = {'f','a','l','s','e'};
 	private static final char[] NULL_PATTERN = {'n','u','l','l'};

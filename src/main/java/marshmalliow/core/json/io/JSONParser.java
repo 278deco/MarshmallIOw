@@ -1,4 +1,4 @@
-package marshmalliow.core.json.parser;
+package marshmalliow.core.json.io;
 
 import marshmalliow.core.json.exceptions.JSONDepthException;
 import marshmalliow.core.json.exceptions.JSONParseException;
@@ -8,6 +8,13 @@ import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.json.objects.JSONToken;
 import marshmalliow.core.json.utils.JSONTokenEnum;
 
+/**
+ * JSONParser is to check if the provided sequence of {@link JSONToken} is in compliance with JSON syntax.<br/>
+ * <em>See RFC 4627 and RFC 8259.</em>
+ * @see JSONLexer
+ * @author 278deco
+ * @version 1.0.0
+ */
 public class JSONParser {
 
 	public static final int MAXIMUM_DEPTH = 512;

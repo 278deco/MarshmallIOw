@@ -5,12 +5,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import marshmalliow.core.json.io.JSONLexer;
+import marshmalliow.core.json.io.JSONParser;
 import marshmalliow.core.json.io.JSONWriter;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;
-import marshmalliow.core.json.parser.JSONLexer;
-import marshmalliow.core.json.parser.JSONParser;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.FileType;
 import marshmalliow.core.objects.IOClass;

@@ -9,6 +9,12 @@ import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.json.utils.JSONTokenEnum;
 
+/**
+ * JSONWriter purpose is to write a JSONContainer (the root of a JSON file) with a specific {@link Writer}<br/>
+ * <em>See RFC 4627 and RFC 8259.</em>
+ * @author 278deco
+ * @version 1.0.0
+ */
 public class JSONWriter {
 
 	protected volatile char lastCharWritten;
@@ -16,10 +22,20 @@ public class JSONWriter {
 	protected JSONContainer source;
 	private static final String INDENT = "   ";
 
+	/**
+	 * Constructor of {@link JSONWriter}
+	 * @param source The root of a JSON file (represented as a {@link JSONContainer})
+	 */
 	public JSONWriter(JSONContainer source) {
 		this.source = source;
 	}
 	
+	/**
+	 * Write the content of the JSON file with a specific {@link Writer}<br/>
+	 * The content of the file will be written as one single line without any formatting
+	 * @param writer The writer used to write down the container
+	 * @throws IOException
+	 */
 	public void write(Writer writer) throws IOException {
 		if(this.source instanceof JSONObject) {
 			writeObject(writer, (JSONObject)this.source, 0, false);
@@ -28,6 +44,12 @@ public class JSONWriter {
 		}
 	}
 	
+	/**
+	 * Write the content of the JSON file with a specific {@link Writer}<br/>
+	 * The content of the file will be written with a more human readable format.
+	 * @param writer The writer used to write down the container
+	 * @throws IOException
+	 */
 	public void writeWithPrettyPrint(Writer writer) throws IOException {
 		if(this.source instanceof JSONObject) {
 			writeObject(writer, (JSONObject)this.source, 0, true);
