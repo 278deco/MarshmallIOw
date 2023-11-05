@@ -14,5 +14,7 @@ public class JSONParseException extends IOException {
 		super(msg);
 	}
 	
-	
+	public JSONParseException(String msg, Exception cause) {
+		super(msg, cause);
+	}
 }

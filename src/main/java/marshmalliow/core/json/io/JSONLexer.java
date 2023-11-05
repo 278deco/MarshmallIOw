@@ -61,7 +61,7 @@ public class JSONLexer {
 		try {
 			n = inputSource.read(nbuffer, 0, nbuffer.length);
 		} catch (IOException e) {
-			throw new JSONParseException();
+			throw new JSONParseException("Unexpected exception while filling the buffer",e);
 		}
 
 		counter = this.bufferIndex;

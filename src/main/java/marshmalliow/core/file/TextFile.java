@@ -2,22 +2,32 @@ package marshmalliow.core.file;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.FileType;
 import marshmalliow.core.objects.IOClass;
+import marshmalliow.core.security.EncryptionType;
+import marshmalliow.core.security.FileCredentials;
 
 /**
  * Manage text file easily (like .txt file) with reading, writing methods
@@ -29,6 +39,7 @@ public class TextFile extends IOClass {
 	private static final Logger LOGGER = LogManager.getLogger(TextFile.class);
 	
 	private List<String> content;
+	private final Cipher cipher; //Only use when the file is encrypted
 	
 	/**
 	 * Create new TextFile instance
@@ -37,17 +48,41 @@ public class TextFile extends IOClass {
 	 */
 	public TextFile(Directory dir, String name) {
 		super(dir, name);
+		this.cipher = null;
 		
+		initFile();
+	}
+	
+	/**
+	 * Create new TextFile instance
+	 * @param dir The directory of the TextFile
+	 * @param name The name of the file <strong>without extension</strong>
+	 * @param credentials The {@link FileCredentials} associated with this file
+	 */
+	public TextFile(Directory dir, String name, FileCredentials credentials) {
+		super(dir, name, credentials);
+		this.cipher = initCipher();
+		
+		initFile();
+	}
+	
+	private void initFile() {
 		try {
 			
 			if(!Files.exists(getFullPath()))
 				Files.createFile(getFullPath());
 			this.content = new ArrayList<>();
 			
-			readFile(false);
-			
 		} catch (IOException e) {
 			LOGGER.error("Unexpected error while loading text file [dir: {}, name: {}] with message {}", this.directory.getName(), this.fileName, e.getMessage());
+		}
+	}
+	
+	private Cipher initCipher() {
+		try {
+			return this.credentials.getType() != EncryptionType.NONE ? Cipher.getInstance(this.credentials.getType().getEncryption()) : null;
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			return null;
 		}
 	}
 	
@@ -57,14 +92,12 @@ public class TextFile extends IOClass {
 	 */
 	@Override
 	public void readFile(boolean forceRead) {
-		FileInputStream input = null;
-		InputStreamReader fileReader = null;
+		InputStream input = null;
 		BufferedReader buffer = null;
 		
 		try {
-			input = new FileInputStream(this.directory.getPath().resolve(fileName).toFile());
-			fileReader = new InputStreamReader(input, "UTF-8");
-			buffer = new BufferedReader(fileReader);
+			input = Files.newInputStream(getFullPath());
+			buffer = determineInputEncryption(input);
 			
 			if(!this.content.isEmpty()) this.content.clear();
 			
@@ -76,14 +109,42 @@ public class TextFile extends IOClass {
 		}catch(IOException e) {
 			LOGGER.error("Unexpected error while loading text file [dir: {}, name: {}] with message {}", this.directory.getName(), this.fileName, e.getMessage());
 		}finally {
-			try { if(input != null) input.close(); }catch(IOException e) {}
 			try { if(buffer != null) buffer.close(); }catch(IOException e) {}
-			try { if(fileReader != null) fileReader.close(); }catch(IOException e) {}
+			try { if(input != null) input.close(); }catch(IOException e) {}
 		}
 	}
 	
 	public void readFile() {
 		this.readFile(false);
+	}
+	
+	private BufferedReader determineInputEncryption(InputStream fis) throws IOException {
+		switch(this.credentials.getType()) {
+			case AES_GCM_TAG_96 -> {
+				try {
+					return SecurityHelper.decryptWithAESGCM(cipher, fis, credentials, 96);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			case AES_GCM_TAG_112 -> {
+				try {
+					return SecurityHelper.decryptWithAESGCM(cipher, fis, credentials, 112);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			case AES_GCM_TAG_128 -> {
+				try {
+					return SecurityHelper.decryptWithAESGCM(cipher, fis, credentials, 128);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			default -> {
+				return new BufferedReader(new InputStreamReader(fis, "UTF-8"));
+			}
+		}
 	}
 	
 	/**
@@ -97,14 +158,12 @@ public class TextFile extends IOClass {
 			
 			@Override
 			public void run() {
-				FileOutputStream output = null;
-				OutputStreamWriter fileWriter = null;
+				OutputStream output = null;
 				BufferedWriter buffer = null;
 				
 				try {
-					output = new FileOutputStream(directory.getPath().resolve(fileName).toFile());
-					fileWriter = new OutputStreamWriter(output, "UTF-8");
-					buffer = new BufferedWriter(fileWriter);
+					output = Files.newOutputStream(getFullPath());
+					buffer = determineOutputEncryption(output);
 					
 					for(int i = 0; i < content.size(); i++) {
 						buffer.write(content.get(i));
@@ -114,9 +173,8 @@ public class TextFile extends IOClass {
 				}catch(IOException e) {
 					LOGGER.error("Unexpected error while writing to text file [dir: {}, name: {}] with message {}", directory.getName(), fileName, e.getMessage());
 				}finally {
-					try { if(output != null) output.close(); }catch(IOException e) {}
 					try { if(buffer != null) buffer.close(); }catch(IOException e) {}
-					try { if(fileWriter != null) fileWriter.close(); }catch(IOException e) {}
+					try { if(output != null) output.close(); }catch(IOException e) {}
 				}
 			}
 		},"File-Save-Thread").start();
@@ -125,6 +183,35 @@ public class TextFile extends IOClass {
 	
 	public void saveFile() {
 		this.saveFile(false);
+	}
+	
+	private BufferedWriter determineOutputEncryption(OutputStream fos) throws IOException {
+		switch(this.credentials.getType()) {
+			case AES_GCM_TAG_96 -> {
+				try {
+					return SecurityHelper.encryptWithAESGCM(cipher, fos, credentials, 96);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			case AES_GCM_TAG_112 -> {
+				try {
+					return SecurityHelper.encryptWithAESGCM(cipher, fos, credentials, 112);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			case AES_GCM_TAG_128 -> {
+				try {
+					return SecurityHelper.encryptWithAESGCM(cipher, fos, credentials, 128);
+				}catch(InvalidKeyException | InvalidAlgorithmParameterException e) {
+					throw new SecurityException("Couldn't determine input encryption for file "+this.getFullPath(), e);
+				}
+			}
+			default -> {
+				return new BufferedWriter(new OutputStreamWriter(fos, "UTF-8"));
+			}
+		}
 	}
 
 	/**
@@ -135,7 +222,7 @@ public class TextFile extends IOClass {
 	 */
 	public void addNewLine(String... lines) {
 		for(String line : lines) {
-			if(line != null && line != "" && line.isBlank() && !line.isEmpty()) this.content.add(line);
+			if(line != null && line != "" && !line.isBlank() && !line.isEmpty()) this.content.add(line);
 		}
 	}
 	
@@ -144,6 +231,10 @@ public class TextFile extends IOClass {
 	 */
 	public void clearContent() {
 		this.content.clear();
+	}
+	
+	public List<String> getContent() {
+		return Collections.unmodifiableList(this.content);
 	}
 	
 	/**
