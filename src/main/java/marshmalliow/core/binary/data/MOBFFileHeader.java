@@ -10,6 +10,8 @@ import marshmalliow.core.exceptions.MalformedHeaderException;
 
 public class MOBFFileHeader {
 
+	public static final MOBFFileHeader DEFAULT_HEADER = new MOBFFileHeader(Charset.UTF8, 1);
+	
 	/**
 	 * Official signature for the MOBF File Format<br/>
 	 * Cannot recognize a file if the signature isn't present or corruped
