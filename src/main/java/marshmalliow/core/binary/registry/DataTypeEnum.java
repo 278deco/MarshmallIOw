@@ -1,5 +1,8 @@
 package marshmalliow.core.binary.registry;
 
+
+import org.apache.logging.log4j.Logger;
+
 import marshmalliow.core.binary.data.types.advanced.DatetimeDataType;
 import marshmalliow.core.binary.data.types.advanced.StringDataType;
 import marshmalliow.core.binary.data.types.container.ArrayDataType;
@@ -55,6 +58,28 @@ public enum DataTypeEnum {
 		builder.register(LIST.getId(), ListDataType.class);
 		builder.register(ARRAY.getId(), ArrayDataType.class);
 
+		return builder;
+	}
+	
+	public static DataTypeRegistry.Builder createSafeNewRegistry(Logger logger) {
+		final DataTypeRegistry.Builder builder = DataTypeRegistry.builder();
+
+		try {
+		builder.register(OBJECT.getId(), ObjectDataType.class);
+		builder.register(BYTE.getId(), ByteDataType.class);
+		builder.register(BOOLEAN.getId(), BooleanDataType.class);
+		builder.register(SHORT.getId(), ShortDataType.class);
+		builder.register(INT.getId(), IntegerDataType.class);
+		builder.register(LONG.getId(), LongDataType.class);
+		builder.register(FLOAT.getId(), FloatDataType.class);
+		builder.register(DOUBLE.getId(), DoubleDataType.class);
+		builder.register(STRING.getId(), StringDataType.class);
+		builder.register(DATETIME.getId(), DatetimeDataType.class);
+		builder.register(LIST.getId(), ListDataType.class);
+		builder.register(ARRAY.getId(), ArrayDataType.class);
+		}catch(DatatypeRegistryException e) {
+			logger.fatal("Couldn't initialize a safe data type registry with default types");
+		}
 		return builder;
 	}
 
