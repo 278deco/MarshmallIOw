@@ -4,4 +4,5 @@ public interface JSONContainer {
 	
 	public void setContentModified(boolean value);
 	public boolean isModified();
+	public void clear();
 }
