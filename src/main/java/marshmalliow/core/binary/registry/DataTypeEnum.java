@@ -15,7 +15,7 @@ import marshmalliow.core.binary.data.types.primitive.FloatDataType;
 import marshmalliow.core.binary.data.types.primitive.IntegerDataType;
 import marshmalliow.core.binary.data.types.primitive.LongDataType;
 import marshmalliow.core.binary.data.types.primitive.ShortDataType;
-import marshmalliow.core.exceptions.DatatypeRegistryException;
+import marshmalliow.core.binary.exceptions.DatatypeRegistryException;
 
 public enum DataTypeEnum {
 

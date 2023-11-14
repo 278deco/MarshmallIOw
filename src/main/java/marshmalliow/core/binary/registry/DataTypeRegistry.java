@@ -5,7 +5,7 @@ import java.util.Map;
 
 import marshmalliow.core.binary.data.types.DataType;
 import marshmalliow.core.binary.data.types.RegisteredDataType;
-import marshmalliow.core.exceptions.DatatypeRegistryException;
+import marshmalliow.core.binary.exceptions.DatatypeRegistryException;
 
 public class DataTypeRegistry {
 
