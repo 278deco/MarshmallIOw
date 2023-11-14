@@ -19,6 +19,12 @@ import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.IOClass;
 
+/**
+ * Manage all files and cache them for easy use across a program
+ * @author 278deco
+ * @version 1.0
+ * @deprecated
+ */
 public class IOManager {
 	
 	private static final Logger LOGGER = LogManager.getLogger(IOManager.class);
