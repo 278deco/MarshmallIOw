@@ -15,7 +15,7 @@ public class DirectoryManager {
 	
 	private static final Logger LOGGER = LogManager.getLogger(DirectoryManager.class);
 	
-	private Object mutex = new Object();
+	private final Object mutex = new Object();
 
 	private Set<Directory> directories = new HashSet<>();
 	
@@ -36,6 +36,26 @@ public class DirectoryManager {
 				LOGGER.error("An error occured while creating directory",dir.getName(),". Skipping 1 directory.",e.getMessage());
 				return false;
 			}
+		}
+	}
+	
+	public boolean registerNewDirectoryIfAbsent(Directory dir) {
+		synchronized (mutex) {
+			if(!this.directories.contains(dir)) {
+				try {
+					if(this.directories.add(dir)) {
+						if(Files.createDirectories(dir.getPath()) != null) LOGGER.info("Directory "+dir.getName()+" has been successfully created!");
+						else LOGGER.info("Directory "+dir.getName()+" has been successfully loaded!");
+						
+						return true;
+					}
+					return false;
+				}catch(SecurityException | IOException e) {
+					LOGGER.error("An error occured while creating directory",dir.getName(),". Skipping 1 directory.",e.getMessage());
+					return false;
+				}
+			}
+			return false;
 		}
 	}
 	
