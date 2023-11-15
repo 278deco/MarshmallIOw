@@ -17,8 +17,7 @@ jobs:
         id: project-version
         run: grdversion=$(cat 'gradle.properties' | grep -e ^version) && array=(${grdversion//=/ }) && echo "VERSION=v${array[1]}" >> $GITHUB_OUTPUT
       - name: Create git tag
-        uses: negz/create-tag@v1
+        uses: thejeff77/action-push-tag@v1.0.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: ${{ steps.project-version.outputs.VERSION }}
-          message: "Created new tag version"
+          tag: ${{ steps.project-version.outputs.VERSION }}
+          message: "Created new tag version ${{ steps.project-version.outputs.VERSION }}"
