@@ -1,0 +1,24 @@
+name: gradle-versioning
+on:
+  push:
+    path:
+      - 'gradle.properties'
+
+jobs:
+  create-version-tag:
+    name: Create version Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+      uses: actions/checkout@v4
+      with:
+       ref: 'main'
+      - name:  Get project version with gradle
+      id: project-version
+      run: grdversion=$(cat 'gradle.properties' | grep -e ^version) && array=(${grdversion//=/ }) && echo "VERSION=v${array[1]}" >> $GITHUB_OUPUT
+      - name: Create git tag
+      uses: negz/create-tag@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        version: ${{ steps.project-version.outputs.VERSION }}
+        message: "Created new tag version"
