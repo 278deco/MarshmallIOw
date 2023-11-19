@@ -42,7 +42,15 @@ public class DBFactory {
 	public static DBFactory get() {
 		return instance;
 	}
-
+	
+	/**
+	 * Build and returns a {@link DBTable} class using the provided database type.
+	 * @param <E>
+	 * @param cls The class extends {@link DBTable}
+	 * @param type The type of database we want to communicate with
+	 * @param autoClose If the connection to the database is closed after every SQL requests
+	 * @return The instance of table or null if the table cannot be built
+	 */
 	public <E extends DBTable> E getTable(Class<E> cls, DatabaseType type, boolean autoClose) {
 		E result;
 
@@ -64,7 +72,15 @@ public class DBFactory {
 
 		return result;
 	}
-
+	
+	/**
+	 * Build and returns a {@link DBTable} class using the provided database type.<br/>
+	 * This method provide the auto-close philosophy where the connection to the database is closed after every SQL requests.
+	 * @param <E>
+	 * @param cls The class extends {@link DBTable}
+	 * @param type The type of database we want to communicate with
+	 * @return The instance of table or null if the table cannot be built
+	 */
 	public <E extends DBTable> E getTable(Class<E> cls, DatabaseType type) {
 		return this.getTable(cls, type, true);
 	}
