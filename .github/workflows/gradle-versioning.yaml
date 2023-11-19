@@ -1,7 +1,7 @@
 name: gradle-versioning
 on:
   push:
-    path:
+    paths:
       - 'gradle.properties'
 
 jobs:
