@@ -37,6 +37,8 @@ allprojects {
 	
 	dependencies {
 		api "org.mariadb:r2dbc-mariadb:$mariadb_version"
+		api 'io.r2dbc:r2dbc-pool:1.0.1.RELEASE'
+
 		
 		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
 		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
@@ -48,6 +50,7 @@ allprojects {
 		
 		// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
 		testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
+		testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:$junit_version'
 	}
 	
 	 tasks.withType(JavaCompile) {
@@ -66,6 +69,10 @@ allprojects {
         withJavadocJar()
         withSourcesJar()
     }
+    
+    test {
+    	useJUnitPlatform()
+	}
     
     publishing {
     	publications {
