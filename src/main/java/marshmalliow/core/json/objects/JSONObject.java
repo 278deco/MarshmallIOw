@@ -12,6 +12,22 @@ public class JSONObject extends ConcurrentHashMap<String, Object> implements JSO
 	
 	private final AtomicBoolean contentModified = new AtomicBoolean(false);
 	
+	public <E> E get(Object key, Class<E> castType) {
+		try {
+			return castType.cast(super.get(key));
+		}catch(ClassCastException e) {
+			return null;
+		}
+	}
+	
+	public <E> E getOrDefault(Object key, E defaultValue, Class<E> castType) {
+		try {
+			return castType.cast(super.get(key));
+		}catch(ClassCastException e) {
+			return defaultValue;
+		}
+	}
+	
 	@Override
 	public boolean replace(String key, Object oldValue, Object newValue) {
 		final boolean result = super.replace(key, oldValue, newValue);

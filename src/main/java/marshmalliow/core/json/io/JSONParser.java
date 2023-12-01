@@ -13,7 +13,7 @@ import marshmalliow.core.json.utils.JSONTokenEnum;
  * <em>See RFC 4627 and RFC 8259.</em>
  * @see JSONLexer
  * @author 278deco
- * @version 1.0.0
+ * @version 1.0.1
  */
 public class JSONParser {
 
@@ -39,9 +39,18 @@ public class JSONParser {
 	public JSONParser(JSONLexer lexer) {
 		this.lexer = lexer;
 	}
-
+	
+	/**
+	 * Parse the {@link JSONToken} provided by the {@link JSONLexer}.<br/>
+	 * Update the state machine depending on the token encountered.<br/>
+	 * This method is only called for the token on a JSON file. Depending of what token is found, either
+	 * {@link #parseObject(int)} or {@link #parseArray(int)} is called.<br/><br/>
+	 * The JSONContainer is either a {@link JSONObject} or {@link JSONArray}. It acts as the root of the JSON File.
+	 * @return a JSONContainer object depending on the type of JSON File
+	 * @throws JSONParseException
+	 */
 	public synchronized JSONContainer parse() throws JSONParseException {
-		final JSONToken firstToken = lexer.nextToken(); //determine if the json is an object or an array 
+		final JSONToken firstToken = lexer.nextToken(); //determine if the json is an object or an array
 		
 		switch (firstToken.getType() ) {
 		case LEFT_BRACE:
@@ -65,15 +74,23 @@ public class JSONParser {
 		}
 	}
 	
+	/**
+	 * Recursive method invoked for the first time by {@link #parse()} when parsing a {@link JSONObject} root. (The file starts with {@code LEFT_BRACE}, '{').<br/>
+	 * Each time the method encounter an {@code LEFT_BRACE}, the method call itself and add one to the depth parameter. The JSON File has a maximum depth limit of {@link #MAXIMUM_DEPTH}.<br/>
+	 * If a {@code LEFT_BRACKET} is encountered, the method call {@link #parseArray(int)}.
+	 * @param depth The current depth level of the method
+	 * @return A parsed {@link JSONObject}
+	 * @throws JSONParseException
+	 */
 	private JSONObject parseObject(int depth) throws JSONParseException {
 		if(depth > MAXIMUM_DEPTH) throw new JSONDepthException();
 		
 		final JSONObject obj = new JSONObject();
-		
 		JSONToken token;
 		String lastTokenName = null;
 		do {
 			token = lexer.nextToken();
+			
 			switch (token.getType()) {
 				case LEFT_BRACE:
 					if(state == VALUE_NAME) {
@@ -119,14 +136,20 @@ public class JSONParser {
 				default:
 					throw new JSONParseException();
 			}
-			
 		}while(token.getType() != JSONTokenEnum.RIGHT_BRACE);
 		
 		state = END_OBJ;
-		
 		return obj;
 	}
 	
+	/**
+	 * Recursive method invoked for the first time by {@link #parse()} when parsing a {@link JSONArray} root. (The file starts with {@code LEFT_BRACKET}, '[').<br/>
+	 * Each time the method encounter an {@code LEFT_BRACKET}, the method call itself and add one to the depth parameter. The JSON File has a maximum depth limit of {@link #MAXIMUM_DEPTH}.<br/>
+	 * If a {@code LEFT_BRACE} is encounter, the method call {@link #parseObject(int)}.
+	 * @param depth The current depth level of the method
+	 * @return A parsed {@link JSONArray}
+	 * @throws JSONParseException
+	 */
 	private JSONArray parseArray(int depth) throws JSONParseException {
 		if(depth > MAXIMUM_DEPTH) throw new JSONDepthException();
 		
@@ -183,6 +206,10 @@ public class JSONParser {
 		return arr;
 	}
 	
+	/**
+	 * Define a new lexer to be used by the this parser instance.
+	 * @param lexer The new lexer
+	 */
 	public synchronized void setLexer(JSONLexer lexer) {
 		this.lexer = lexer;
 	}

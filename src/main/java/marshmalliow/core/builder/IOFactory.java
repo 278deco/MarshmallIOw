@@ -120,7 +120,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public <E extends JSONContainer> E getJSONFileContent(String directoryID, String jsonName, Class<E> classContainer, Optional<FileCredentials> credentials) throws IOException {
 		return getJSONFileContent(getDirectory(directoryID), jsonName, classContainer, credentials);
@@ -135,7 +135,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path))}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public <E extends JSONContainer> E getJSONFileContent(Path path, String jsonName, Class<E> classContainer, Optional<FileCredentials> credentials) throws IOException {
 		return getJSONFileContent(getDirectory(path), jsonName, classContainer, credentials);
@@ -173,7 +173,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public JSONFile createNewJSONFile(String directoryID, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewJSONFile(getDirectory(directoryID), jsonName, classContainer, credentials);
@@ -188,7 +188,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public JSONFile createNewJSONFile(Path path, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewJSONFile(getDirectory(path), jsonName, classContainer, credentials);
@@ -228,7 +228,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return an {@link ObjectDataType} with the data of the MOBF File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public ObjectDataType getMOBFileContent(String directoryID, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getMOBFileContent(getDirectory(directoryID), mobfName, DEFAULT_MOBF_REGISTRY, credentials);
@@ -238,11 +238,11 @@ public class IOFactory {
 	 * Open a MOBF File present on the disk and get gather its content<br/>
 	 * The {@link DataTypeRegistry} used by this function is {@link IOFactory#DEFAULT_MOBF_REGISTRY} 
 	 * @param path The path of the directory where the file is stored
-	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param mobfName The name of the file <strong>without extension</strong>
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return an {@link ObjectDataType} with the data of the MOBF File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path))}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public ObjectDataType getMOBFileContent(Path path, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getMOBFileContent(getDirectory(path), mobfName, DEFAULT_MOBF_REGISTRY, credentials);
@@ -269,7 +269,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return an {@link ObjectDataType} with the data of the MOBF File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public ObjectDataType getMOBFileContent(String directoryID, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getMOBFileContent(getDirectory(directoryID), mobfName, registry, credentials);
@@ -283,7 +283,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return an {@link ObjectDataType} with the data of the MOBF File
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public ObjectDataType getMOBFileContent(Path path, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getMOBFileContent(getDirectory(path), mobfName, registry, credentials);
@@ -321,7 +321,7 @@ public class IOFactory {
 	 * @param mobfName The name of the file <strong>without extension</strong>
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(directoryID), mobfName, credentials);
@@ -337,7 +337,7 @@ public class IOFactory {
 	 * @param mobfName The name of the file <strong>without extension</strong>
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public MOBFFile createNewMOBFFile(Path path, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(path), mobfName, credentials);
@@ -370,7 +370,7 @@ public class IOFactory {
 	 * @param registry The list of {@link DataType} possibly present in the file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, credentials);
@@ -386,7 +386,7 @@ public class IOFactory {
 	 * @param registry The list of {@link DataType} possibly present in the file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(path), mobfName, registry, credentials);
@@ -419,7 +419,7 @@ public class IOFactory {
 	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, credentials);
@@ -435,7 +435,7 @@ public class IOFactory {
 	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(path), mobfName, registry, fileHeader, credentials);
@@ -468,7 +468,7 @@ public class IOFactory {
 	 * @param fileCompression The {@link CompressionType} used for the new file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, fileCompression, credentials);
@@ -484,7 +484,7 @@ public class IOFactory {
 	 * @param fileCompression The {@link CompressionType} used for the new file
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
 		return createNewMOBFFile(getDirectory(path), mobfName, registry, fileHeader, fileCompression, credentials);
@@ -518,7 +518,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return A unmodifiable list of the lines contained in the file
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public List<String> getTextFileContent(String directoryID, String fileName, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getTextFileContent(getDirectory(directoryID), fileName, credentials);
@@ -531,7 +531,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return A unmodifiable list of the lines contained in the file
 	 * @throws IOException
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public List<String> getTextFileContent(Path path, String fileName, Optional<FileCredentials> credentials/*Unused for now*/) throws IOException {
 		return getTextFileContent(getDirectory(path), fileName, credentials);
@@ -564,8 +564,8 @@ public class IOFactory {
 	 * @param directoryID The id of the directory where the file will be stored
 	 * @param fileName The name of the file <strong>without extension</strong>
 	 * @param credentials (Optional) the credentials if the file will be encrypted
-	 * @return a new instance of TextFile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-	 * @see {@link DirectoryManager#getLoadedDirectory(String)}
+	 * @return a new instance of TextFile
+	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
 	public TextFile createNewTextFile(String directoryID, String fileName, Optional<FileCredentials> credentials) {
 		return createNewTextFile(getDirectory(directoryID), fileName, credentials);
@@ -578,7 +578,7 @@ public class IOFactory {
 	 * @param fileName The name of the file <strong>without extension</strong>
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of TextFile
-	 * @see {@link DirectoryManager#getLoadedDirectory(Path)}
+	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
 	public TextFile createNewTextFile(Path path, String fileName, Optional<FileCredentials> credentials) {
 		return createNewTextFile(getDirectory(path), fileName, credentials);
@@ -589,7 +589,6 @@ public class IOFactory {
 	 * No other action is performed except the creation of the instance
 	 * @param directory The {@link Directory} where the file will be stored
 	 * @param fileName The name of the file <strong>without extension</strong>
-	 * @param classContainer The root of the JSON file to be created (Object or Array)
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of TextFile
 	 */

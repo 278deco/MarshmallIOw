@@ -14,7 +14,7 @@ import marshmalliow.core.json.utils.JSONTokenEnum;
  * <em>See RFC 4627 and RFC 8259.</em>
  * @see JSONParser
  * @author 278deco
- * @version 1.0.0
+ * @version 1.0.1
  */
 public class JSONLexer {
 
@@ -38,7 +38,7 @@ public class JSONLexer {
 	/**
 	 * Increase the buffer reading position (index).<br/>
 	 * If the reading position is greater than the buffer size, refilled the buffer with new data
-	 * @param number the number to be added to the buffer reading position
+	 * @param number The number to be added to the buffer reading position
 	 * @return If the buffer has been refilled when the reading position increased
 	 * @throws IOException
 	 */
@@ -53,6 +53,12 @@ public class JSONLexer {
 		return false;
 	}
 	
+	/**
+	 * Fill the reading buffer with new data from the reader.<br/>
+	 * This method updated the {@link #buffer} and {@link #bufferIndex} variables.
+	 * @return The number of character refilled in the buffer
+	 * @throws JSONParseException
+	 */
 	private int fillBuffer() throws JSONParseException {
 		char[] nbuffer = new char[BUFFER_SIZE];
 		this.bufferIndex = 0;
@@ -72,9 +78,16 @@ public class JSONLexer {
 		return n;
 	}
 	
+	/**
+	 * Get the next {@link JSONToken} depending on the character encountered in the {@link #buffer}.<br/>
+	 * If the buffer is empty, a {@link JSONTokenEnum#EOF} is returned to acknowledge the end of the reading. 
+	 * This method always return EOF when the end of the file has been reached, no taking into matter the number of calls.<br/><br/>
+	 * Internally, this method loop until a proper {@link JSONToken} is found, discarding all unwanted characters like {@code \n, \r, \t}...
+	 * @return A JSONToken read from the {@link #inputSource}
+	 * @throws JSONParseException
+	 */
 	public synchronized JSONToken nextToken() throws JSONParseException {
 		if(counter == 0) fillBuffer();
-
 
 		JSONToken result = null;
 		
@@ -86,6 +99,9 @@ public class JSONLexer {
 				
 				switch (readChar) {
 					case ' ': break;
+					case '\n': break;
+					case '\r': break;
+					case '\t': break;
 					case ':':
 						result = new JSONToken(JSONTokenEnum.KEY_VALUE_SEPARATOR);
 						break;
@@ -114,7 +130,7 @@ public class JSONLexer {
 						break;
 					default:
 						result = tokenizeNumbers(readChar);
-						if(result == null) throw new IllegalArgumentException("Unexpected value: " + buffer[bufferIndex]);
+						if(result == null) throw new IllegalArgumentException("Unexpected value: " + buffer[this.bufferIndex]);
 						break;
 				}
 				
@@ -125,6 +141,12 @@ public class JSONLexer {
 		return result;
 	}
 	
+	/**
+	 * This method is used to insert the string data of a {@link JSONTokenEnum#VALUE_STRING} into its {@link JSONToken} instance.<br/>
+	 * It read the {@link #buffer} and take all characters between two quotations marks as the string data.
+	 * @return A {@link JSONToken} containing string data
+	 * @throws JSONParseException
+	 */
 	private JSONToken tokenizeString() throws JSONParseException {
 		if(inputSource == null) throw new JSONParseException("Input source closed");
 		
@@ -145,7 +167,13 @@ public class JSONLexer {
 		
 		return new JSONToken(JSONTokenEnum.VALUE_STRING, new String(strbuff, 0, strPos));
 	}
-
+	
+	/**
+	 * This method is used to create special {@link JSONToken} like {@link JSONTokenEnum#VALUE_TRUE}, {@link JSONTokenEnum#VALUE_FALSE} and {@link JSONTokenEnum#VALUE_NULL}.
+	 * @param startingChar The starting character, meaning the character read from the buffer how caused the invocation this method.
+	 * @return A {@link JSONToken} containing {@code true, false, null} data
+	 * @throws JSONParseException
+	 */
 	private JSONToken tokenizeSpecialKeywords(char startingChar) throws JSONParseException {
 		if(inputSource == null) throw new JSONParseException("Input source closed");
 
@@ -228,6 +256,12 @@ public class JSONLexer {
 		}
 	}
 	
+	/**
+	 * This method is used to create number {@link JSONToken} and deciding if it's either a {@link JSONTokenEnum#VALUE_DOUBLE}, {@link JSONTokenEnum#VALUE_FLOAT}, {@link JSONTokenEnum#VALUE_INTEGER} or {@link JSONTokenEnum#VALUE_LONG}.
+	 * @param readChar The read character, meaning the character read from the buffer how caused the invocation this method.
+	 * @return A {@link JSONToken} containing a number data
+	 * @throws JSONParseException
+	 */
 	private JSONToken tokenizeNumbers(char readChar) throws JSONParseException {
 		if(inputSource == null) throw new JSONParseException("Input source closed");
 		
@@ -242,7 +276,7 @@ public class JSONLexer {
 			
 			if(c == '.' || c == 'e' || c == 'E') doubleCast = true;
 			
-			if(incBuffer(1)) {
+			if(incBuffer(1)) { //If the global buffer has been refilled, when need to expand the size of the strbuff containing the number data.
 				char[] nstrbuff = new char[strbuff.length+this.buffer.length];
 				System.arraycopy(strbuff, 0, nstrbuff, 0, strbuff.length);
 				strbuff = nstrbuff;
@@ -258,6 +292,12 @@ public class JSONLexer {
 		}
 	}
 	
+	/**
+	 * Convert a number data into a {@link JSONToken} containing a {@link JSONTokenEnum#VALUE_DOUBLE} or {@link JSONTokenEnum#VALUE_FLOAT}.
+	 * @param strRepr The string representation of the number
+	 * @return A {@link JSONToken} containing the parsed number data
+	 * @throws JSONParseException
+	 */
 	private JSONToken convertFloatingNumberToToken(String strRepr) throws JSONParseException {
 		final Double value = Double.parseDouble(strRepr);
 		if(value.isNaN() || value.isInfinite()) throw new JSONParseException("NaN or Infinity value founded");
@@ -265,10 +305,20 @@ public class JSONLexer {
 		return (value > Float.MAX_VALUE) ? new JSONToken(JSONTokenEnum.VALUE_DOUBLE, value) : new JSONToken(JSONTokenEnum.VALUE_FLOAT, value.floatValue());
 	}
 	
+	/**
+	 * Convert a number data into a {@link JSONToken} containing a {@link JSONTokenEnum#VALUE_LONG} or {@link JSONTokenEnum#VALUE_INTEGER}.
+	 * @param strRepr The string representation of the number
+	 * @return A {@link JSONToken} containing the parsed number data
+	 * @throws JSONParseException
+	 */
 	private JSONToken convertNumberToToken(String strRepr) {
-		final Long value = Long.parseLong(strRepr);
-		
-		return (value > Integer.MAX_VALUE) ? new JSONToken(JSONTokenEnum.VALUE_LONG, value) : new JSONToken(JSONTokenEnum.VALUE_INTEGER, value.intValue());
+		try {
+			final Long value = Long.parseLong(strRepr);
+			
+			return (value > Integer.MAX_VALUE) ? new JSONToken(JSONTokenEnum.VALUE_LONG, value) : new JSONToken(JSONTokenEnum.VALUE_INTEGER, value.intValue());
+		}catch(NumberFormatException e) {
+			return null;
+		}
 	}
 	
 	private boolean isValidNumber(char c) {
