@@ -10,6 +10,6 @@ public abstract class DBTable {
 		this.implementation = implementation;
 	}
 
-	public abstract String getTableName();
+	public abstract String getSQLTableName();
 
 }

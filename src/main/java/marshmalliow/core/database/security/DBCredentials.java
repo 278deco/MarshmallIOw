@@ -13,6 +13,9 @@ public class DBCredentials {
 	private final Duration connectionTimeout;
 	private final boolean autoCommit;
 	private final boolean allowMultiQueries;
+	private boolean withPool = false;
+	private Duration poolTimeout;
+	private int poolMaxSize;
 
 	private DBCredentials(Builder builder) {
 		this.host = builder.host;
@@ -22,6 +25,9 @@ public class DBCredentials {
 		this.connectionTimeout = builder.connectionTimeout;
 		this.autoCommit = builder.autoCommit;
 		this.allowMultiQueries = builder.allowMultiQueries;
+		this.withPool = builder.withPool;
+		this.poolTimeout = builder.poolTimeout;
+		this.poolMaxSize = builder.poolMaxSize;
 	}
 
 	public static final DBCredentials.Builder builder() {
@@ -63,6 +69,18 @@ public class DBCredentials {
 	public boolean areMultiQueriesAllowed() {
 		return allowMultiQueries;
 	}
+	
+	public boolean isWithPool() {
+		return withPool;
+	}
+	
+	public int getPoolMaxSize() {
+		return poolMaxSize;
+	}
+	
+	public Duration getPoolTimeout() {
+		return poolTimeout;
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -77,7 +95,10 @@ public class DBCredentials {
 				this.password == obj.password &&
 				this.connectionTimeout == obj.connectionTimeout &&
 				this.autoCommit == obj.autoCommit &&
-				this.allowMultiQueries == obj.allowMultiQueries;
+				this.allowMultiQueries == obj.allowMultiQueries &&
+				this.withPool == obj.withPool &&
+				this.poolMaxSize == obj.poolMaxSize &&
+				this.poolTimeout == obj.poolTimeout;
 	}
 
 	public static final class Builder implements Cloneable {
@@ -89,6 +110,9 @@ public class DBCredentials {
 		private Duration connectionTimeout;
 		private boolean autoCommit = true;
 		private boolean allowMultiQueries = false;
+		private boolean withPool = false;
+		private Duration poolTimeout;
+		private int poolMaxSize;
 
 		private Builder() {}
 
@@ -130,6 +154,21 @@ public class DBCredentials {
 
 		public Builder allowMultiQueries(boolean value) {
 			this.allowMultiQueries = value;
+			return this;
+		}
+		
+		public Builder withPool(boolean value) {
+			this.withPool = value;
+			return this;
+		}
+		
+		public Builder poolMaxIdleTime(Duration duration) {
+			this.poolTimeout = duration;
+			return this;
+		}
+		
+		public Builder poolMaxSize(int size) {
+			this.poolMaxSize = size;
 			return this;
 		}
 
