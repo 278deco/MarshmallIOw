@@ -22,6 +22,14 @@ public class DBCredentialsHolder {
 		this.credentials = credentials;
 	}
 	
+	/**
+	 * Get the credentials for a MariaDB database.<br/>
+	 * If the connection has already been established before, this method will use cached object to retrieve the instance much faster.<br/>
+	 * If the pool usage is activated, the connection pool will be created or retrieved and provide a new connection.
+	 * @return a mono containing the {@link MariadbConnection}
+	 * @see DBCredentials
+	 * @see MariadbConnection
+	 */
 	public Mono<MariadbConnection> getMariaDBConnection() {
 		if(this.credentials.isWithPool() && mariaDBPool == null || !this.credentials.isWithPool() && mariaDBConnectionFactory == null) {
 			try {
