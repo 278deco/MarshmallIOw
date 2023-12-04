@@ -10,6 +10,10 @@ public abstract class DBTable {
 		this.implementation = implementation;
 	}
 
-	public abstract String getTableName();
+	/**
+	 * The name of the SQL Table. Must be exactly the same as the one present in the database.
+	 * @return the SQL table's name. 
+	 */
+	public abstract String getSQLTableName();
 
 }

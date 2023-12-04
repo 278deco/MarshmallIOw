@@ -9,6 +9,12 @@ import marshmalliow.core.database.security.DBCredentials;
 import marshmalliow.core.database.security.DBCredentialsHolder;
 import marshmalliow.core.database.utils.DatabaseType;
 
+/**
+ * Factory storing database credentials and dispatching them to the Java table representation.<br/>
+ * The factory can handle every type of databases present in {@link DatabaseType}.
+ * @author 278deco
+ * @version 1.0.0
+ */
 public class DBFactory {
 
 	private static volatile DBFactory instance;
@@ -30,7 +36,7 @@ public class DBFactory {
 				if(instance == null) instance = new DBFactory(credentials);
 			}
 		}
-
+	
 		return instance;
 	}
 
@@ -58,7 +64,7 @@ public class DBFactory {
 			case MARIADB -> {
 				try {
 					final Constructor<E> constructor = cls.getConstructor(DBImplementation.class);
-					final MariaDBImplementation implementation = new MariaDBImplementation(credentialsHolder.getMariaDBFactory(), autoClose);
+					final MariaDBImplementation implementation = new MariaDBImplementation(credentialsHolder.getMariaDBConnection(), autoClose);
 
 					result = constructor.newInstance(implementation);
 				}catch(Exception e) {
