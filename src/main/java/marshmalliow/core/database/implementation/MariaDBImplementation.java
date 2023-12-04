@@ -162,7 +162,7 @@ public class MariaDBImplementation extends DBImplementation {
 	}
 	
 	@Override
-	public List<List<Object>> insertWithResult(String request, List<Object> arguments, int expectedReturnNumber) throws SQLException {
+	public List<List<Object>> insertWithResult(String request, List<Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
 		final MariadbStatement statement = this.connection.createStatement(request);
@@ -172,18 +172,7 @@ public class MariaDBImplementation extends DBImplementation {
 
 		try {
 			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> {
-					final List<Object> list = new ArrayList<>();
-					for(int i = 0; i < expectedReturnNumber; i++) {
-						try {
-							list.add(row.get(i, Object.class));
-						}catch(IndexOutOfBoundsException e) {
-							i = expectedReturnNumber; //Fast break;
-						}
-					}
-					
-					return list;
-				});
+				return result.map((row, metadata) -> rowIterator(row, Object.class));
 			}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
@@ -212,25 +201,16 @@ public class MariaDBImplementation extends DBImplementation {
 	}
 	
 	@Override
-	public List<List<Object>> insertWithResult(String request, Map<String, Object> arguments, int expectedReturnNumber) throws SQLException {
+	public List<List<Object>> insertWithResult(String request, Map<String, Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
 		final MariadbStatement statement = this.connection.createStatement(request);
 		arguments.forEach((key, value) -> statement.bind(key, value));
 
 		try {
-			return statement.execute().flatMap(result -> result.map((row, metadata) -> {
-				final List<Object> returnList = new ArrayList<>();
-				for(int i = 0; i < expectedReturnNumber; i++) {
-					try {
-						returnList.add(row.get(i, Object.class));
-					}catch(IndexOutOfBoundsException e) {
-						i = expectedReturnNumber; //Fast break;
-					}
-				}
-
-				return returnList;
-			})).collectList().block();
+			return statement.execute().flatMap(result -> {
+				return result.map((row, metadata) -> rowIterator(row, Object.class));
+			}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
