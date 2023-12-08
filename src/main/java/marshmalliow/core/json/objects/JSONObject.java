@@ -12,6 +12,26 @@ public class JSONObject extends ConcurrentHashMap<String, Object> implements JSO
 	
 	private final AtomicBoolean contentModified = new AtomicBoolean(false);
 	
+    public JSONObject() {
+    }
+
+    public JSONObject(int initialCapacity) {
+        super(initialCapacity);
+    }
+
+    public JSONObject(Map<String, Object> m) {
+    	super(m.size());
+        super.putAll(m);
+    }
+
+    public JSONObject(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
+    }
+
+    public JSONObject(int initialCapacity, float loadFactor, int concurrencyLevel) {
+        super(initialCapacity, loadFactor, concurrencyLevel);
+    }
+	
 	public <E> E get(Object key, Class<E> castType) {
 		try {
 			return castType.cast(super.get(key));

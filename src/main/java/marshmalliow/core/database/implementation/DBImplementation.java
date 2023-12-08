@@ -106,7 +106,6 @@ public abstract class DBImplementation {
 	 * all the requested columns of the table. 
 	 * The resulting objects are returned as basic {@link Object} and must be casted depending on their real type.<br/><br/>
 	 * The SQL Request will be prepared and the arguments will be bound to the statement in their order of appearance in the list.
-	 * @param <E>
 	 * @param request The SQL Request to be executed
 	 * @param arguments The arguments used in the statement
 	 * @return The response of the database
@@ -121,7 +120,6 @@ public abstract class DBImplementation {
 	 * all the requested columns of the table. 
 	 * The resulting objects are returned as basic {@link Object} and must be casted depending on their real type.<br/><br/>
 	 * The SQL Request will be prepared and the arguments will be bound to the statement using their respective key.
-	 * @param <E>
 	 * @param request The SQL Request to be executed
 	 * @param arguments The arguments used in the statement
 	 * @return The response of the database
