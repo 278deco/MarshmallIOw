@@ -83,6 +83,21 @@ public class DirectoryManager {
 		
 	}
 	
+	public boolean registerNewDirectories(Set<Directory> directories) {
+		try {
+			lock.writeLock().lock();
+			try {
+				this.directories.addAll(directories);
+			}catch(UnsupportedOperationException | ClassCastException | IllegalArgumentException e) {
+				return false;
+			}
+			
+			return true;
+		}finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
 	public boolean removeDirectory(Directory dir) {
 		try {
 			lock.writeLock().lock();
