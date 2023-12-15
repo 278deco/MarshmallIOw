@@ -66,4 +66,12 @@ public class DBCredentialsHolder {
 			return Mono.empty();
 		}
 	}
+	
+	public Mono<Void> closeAllConnections() {
+		if(this.credentials.isWithPool() && this.mariaDBPool != null) {
+			return this.mariaDBPool.close();
+		}
+		
+		return Mono.empty();
+	}
 }

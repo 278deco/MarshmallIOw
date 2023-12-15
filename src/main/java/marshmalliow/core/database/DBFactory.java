@@ -90,4 +90,8 @@ public class DBFactory {
 	public <E extends DBTable> E getTable(Class<E> cls, DatabaseType type) {
 		return this.getTable(cls, type, true);
 	}
+	
+	public void closeAllConnections() throws RuntimeException {
+		this.credentialsHolder.closeAllConnections().block();
+	}
 }
