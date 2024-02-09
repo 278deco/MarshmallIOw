@@ -155,7 +155,8 @@ public class JSONLexer {
 		
 		incBuffer(1); //Skip the starting quotation mark
 		
-		while(this.buffer[this.bufferIndex] != '\"') {
+		boolean strEnd = false;
+		while(!strEnd) {
 			strbuff[strPos++] = this.buffer[this.bufferIndex];
 			
 			if(incBuffer(1)) {
@@ -163,6 +164,9 @@ public class JSONLexer {
 				System.arraycopy(strbuff, 0, nstrbuff, 0, strbuff.length);
 				strbuff = nstrbuff;
 			}
+			
+			strEnd = this.buffer[this.bufferIndex] == '\"' && this.buffer.length-1 == 0;
+			if(!strEnd) strEnd = this.buffer[this.bufferIndex] == '\"' && this.buffer[this.bufferIndex-1] != '\\';
 		}
 		
 		return new JSONToken(JSONTokenEnum.VALUE_STRING, new String(strbuff, 0, strPos));

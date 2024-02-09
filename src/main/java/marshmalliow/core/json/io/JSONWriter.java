@@ -118,7 +118,7 @@ public class JSONWriter {
 	
 	private String writeValue(Object value) {
 		if(value instanceof String) {
-			return "\""+value+"\"";
+			return "\""+((String)value).replaceAll("(^|[^\\\\])\"", "$1\\\\\"")+"\"";
 		}else {
 			return value.toString();
 		}
