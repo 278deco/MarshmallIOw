@@ -8,6 +8,7 @@ import org.mariadb.r2dbc.api.MariadbConnection;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Mono;
 
 public class DBCredentialsHolder {
@@ -30,43 +31,62 @@ public class DBCredentialsHolder {
 	 * @see DBCredentials
 	 * @see MariadbConnection
 	 */
-	public Mono<MariadbConnection> getMariaDBConnection() {
-		if(this.credentials.isWithPool() && mariaDBPool == null || !this.credentials.isWithPool() && mariaDBConnectionFactory == null) {
-			try {
-				LOCK.lock();
-				if(mariaDBConnectionFactory == null) {
-					this.mariaDBConnectionFactory = new MariadbConnectionFactory(MariadbConnectionConfiguration.builder()
-						.host(credentials.getHost())
-						.port(credentials.getPort())
-						.username(credentials.getUsername())
-						.password(credentials.getPassword())
-						.database(credentials.getDatabase())
-						.allowMultiQueries(credentials.areMultiQueriesAllowed())
-						.autocommit(credentials.isAutoCommitEnabled())
-						.connectTimeout(credentials.getConnectionTimeout()).build());
-				}
-				
-				if(this.credentials.isWithPool() && mariaDBPool == null) {
-					this.mariaDBPool = new ConnectionPool(
-						ConnectionPoolConfiguration.builder(this.mariaDBConnectionFactory)
-						.maxSize(this.credentials.getPoolMaxSize())
-						.maxIdleTime(this.credentials.getPoolTimeout())
-						.build());
-				}
-				
-				return this.credentials.isWithPool() ? this.mariaDBPool.create().cast(MariadbConnection.class) : this.mariaDBConnectionFactory.create();
-			}finally {
-				LOCK.unlock();
-			}
-		}else if(this.credentials.isWithPool() && mariaDBPool != null) {
-			return this.mariaDBPool.create().cast(MariadbConnection.class);
+	public Mono<Connection> getMariaDBConnection() {
+		initializeConnectionPool();
+		initializeMonoConnection();
+		
+		if(this.credentials.isWithPool() && mariaDBPool != null) {
+			return this.mariaDBPool.create().cast(Connection.class);
 		}else if(!this.credentials.isWithPool() && mariaDBConnectionFactory != null) {
-			return this.mariaDBConnectionFactory.create();
+			return this.mariaDBConnectionFactory.create().cast(Connection.class);
 		}else {
 			return Mono.empty();
 		}
 	}
 	
+	public void initializeConnectionPool() {
+		if(this.credentials.isWithPool() && mariaDBPool == null) {
+			try {
+                LOCK.lock();
+                if(mariaDBPool == null) {
+                	if(this.mariaDBConnectionFactory == null) initializeMonoConnection();
+                	
+                    this.mariaDBPool = new ConnectionPool(
+                        ConnectionPoolConfiguration.builder(this.mariaDBConnectionFactory)
+                        .maxSize(this.credentials.getPoolMaxSize())
+                        .maxIdleTime(this.credentials.getPoolTimeout())
+                        .build());
+                }
+			} finally {
+				LOCK.unlock();
+			}
+		}
+	}
+	
+	private void initializeMonoConnection() {
+		if(mariaDBConnectionFactory == null) {
+			try {
+				LOCK.lock();
+				if (mariaDBConnectionFactory == null) {
+					this.mariaDBConnectionFactory = new MariadbConnectionFactory(MariadbConnectionConfiguration
+							.builder().host(credentials.getHost()).port(credentials.getPort())
+							.username(credentials.getUsername()).password(credentials.getPassword())
+							.database(credentials.getDatabase()).allowMultiQueries(credentials.areMultiQueriesAllowed())
+							.autocommit(credentials.isAutoCommitEnabled())
+							.connectTimeout(credentials.getConnectionTimeout()).build());
+				}
+			} finally {
+				LOCK.unlock();
+			}
+		}
+	}
+	
+	/**
+	 * Close all connections to the database.<br/>
+	 * If the pool usage is activated, the pool will be closed.
+	 * 
+	 * @return A {@link Mono} to handle the asynchronous closing of the connection
+	 */
 	public Mono<Void> closeAllConnections() {
 		if(this.credentials.isWithPool() && this.mariaDBPool != null) {
 			return this.mariaDBPool.close();

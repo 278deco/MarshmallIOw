@@ -2,6 +2,9 @@ package marshmalliow.core.database;
 
 import java.lang.reflect.Constructor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import marshmalliow.core.database.implementation.DBImplementation;
 import marshmalliow.core.database.implementation.MariaDBImplementation;
 import marshmalliow.core.database.objects.DBTable;
@@ -17,11 +20,17 @@ import marshmalliow.core.database.utils.DatabaseType;
  */
 public class DBFactory {
 
+	private static final Logger LOGGER = LogManager.getLogger(DBFactory.class);
+
+	
 	private static volatile DBFactory instance;
 	private volatile DBCredentialsHolder credentialsHolder;
 
 	private DBFactory(DBCredentials credentials) {
 		this.credentialsHolder = new DBCredentialsHolder(credentials);
+		if(credentials.isWithPool()) {
+			this.credentialsHolder.initializeConnectionPool();
+		}
 	}
 
 	/**
@@ -68,6 +77,7 @@ public class DBFactory {
 
 					result = constructor.newInstance(implementation);
 				}catch(Exception e) {
+					LOGGER.warn("Unexpected error while building table class with error", e);
 					result = null;
 				}
 			}
