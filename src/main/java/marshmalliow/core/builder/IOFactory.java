@@ -3,12 +3,16 @@ package marshmalliow.core.builder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.management.InstanceNotFoundException;
 
@@ -44,7 +48,7 @@ public class IOFactory {
 	public static final DataTypeRegistry DEFAULT_MOBF_REGISTRY = DataTypeEnum.createSafeNewRegistry(LOGGER).build();
 	public static final Integer DEFAULT_HTTP_TIMEOUT = 300000;
 	
-	private static final Object mutex = new Object();
+	private static final ReentrantLock  mutex = new ReentrantLock();
 	private DirectoryManager directoryManager;
 	
 	private static volatile IOFactory instance;
@@ -58,8 +62,11 @@ public class IOFactory {
 	 */
 	public static void bindDirectoryManager(DirectoryManager dirManager) throws InstanceNotFoundException {
 		if(instance != null) {
-			synchronized (mutex) {
+			try {
+				mutex.lock();
 				instance.directoryManager = dirManager;
+			}finally {
+				mutex.unlock();
 			}
 		}else throw new InstanceNotFoundException("Cannot bind a directory manager before calling get method");
 	}
@@ -86,11 +93,9 @@ public class IOFactory {
 	 * @return a directory object corresponding to the id
 	 */
 	private final Directory getDirectory(String id) {
-		synchronized (mutex) {
-			final Directory dir = this.directoryManager.getLoadedDirectory(id);
-			if(dir == null) throw new NullPointerException("Directory with id "+id+" doesn't exist or is not loaded for the factory");
-			return dir;
-		}
+		final Directory dir = this.directoryManager.getLoadedDirectory(id);
+		if(dir == null) throw new NullPointerException("Directory with id "+id+" doesn't exist or is not loaded for the factory");
+		return dir;
 	}
 	
 	/**
@@ -100,11 +105,18 @@ public class IOFactory {
 	 * @return a directory object corresponding to the path
 	 */
 	private final Directory getDirectory(Path path) {
-		synchronized (mutex) {
-			final Directory dir = this.directoryManager.getLoadedDirectory(path);
-			if(dir == null) throw new NullPointerException("Directory with path "+path+" doesn't exist or is not loaded for the factory");
-			return dir;
-		}
+		final Directory dir = this.directoryManager.getLoadedDirectory(path);
+		if (dir == null)
+			throw new NullPointerException("Directory with path " + path + " doesn't exist or is not loaded for the factory");
+		return dir;
+	}
+	
+	/**
+	 * Return the instance of {@link DirectoryManager} used by this factory
+	 * @return the instance of DirectoryManager
+	 */
+	public DirectoryManager getDirectoryManager() {
+		return this.directoryManager;
 	}
 	
 	/*
@@ -216,6 +228,186 @@ public class IOFactory {
 		}
 	}
 	
+	/**
+	 * Create a new instance of {@link JSONFile} and returns it<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public JSONFile createNewEmptyJSONFile(String directoryID, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
+		return createNewEmptyJSONFile(getDirectory(directoryID), jsonName, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link JSONFile} and returns it<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param path The path of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public JSONFile createNewEmptyJSONFile(Path path, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
+		return createNewEmptyJSONFile(getDirectory(path), jsonName, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link JSONFile} and returns it.<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 */
+	public JSONFile createNewEmptyJSONFile(Directory directory, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+
+		return credentials.isPresent() ? new JSONFile(directory, jsonName, credentials.get()) : new JSONFile(directory, jsonName); 
+	}
+	
+	
+	
+	/**
+	 * Create a new instance of a {@link JSONFile}'s child class and returns it.<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param classContainer The root of the JSON file to be created (Object or Array)
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException 
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, String directoryID, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
+		return createNewJSONFileChild(baseClass, getDirectory(directoryID), jsonName, classContainer, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link JSONFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param path The path of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param classContainer The root of the JSON file to be created (Object or Array)
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException 
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Path path, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
+		return createNewJSONFileChild(baseClass, getDirectory(path), jsonName, classContainer, credentials);
+	}
+	
+	/**
+	 * Create a new instance of a {@link JSONFile}'s child class and returns it.<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param classContainer The root of the JSON file to be created (Object or Array)
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException 
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Directory directory, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws IOException, UnsupportedJSONContainerException {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		try {
+			final Constructor<E> constructor = credentials.isPresent() ? 
+					baseClass.getConstructor(Directory.class, String.class, JSONContainer.class, FileCredentials.class) :
+					baseClass.getConstructor(Directory.class, String.class, JSONContainer.class);
+			
+			if(classContainer == JSONObject.class) {
+				return credentials.isPresent() ? constructor.newInstance(directory, jsonName, new JSONObject(), credentials.get()) : constructor.newInstance(directory, jsonName, new JSONObject()); 
+			}else if(classContainer == JSONArray.class) {
+				return credentials.isPresent() ? constructor.newInstance(directory, jsonName, new JSONArray(), credentials.get()) : constructor.newInstance(directory, jsonName, new JSONArray()); 
+			}else {
+				throw new UnsupportedJSONContainerException();
+			}
+			
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			final IOException thrownedE = new IOException("Cannot create instance of "+jsonName);
+			thrownedE.addSuppressed(e);
+			throw thrownedE;
+		}
+	}
+	
+	/**
+	 * Create a new instance of a {@link JSONFile}'s child class and returns it.<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException 
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, String directoryID, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
+		return createNewJSONFileChild(baseClass, getDirectory(directoryID), jsonName, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link JSONFile} and returns it<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param path The path of the directory where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException 
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Path path, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
+		return createNewJSONFileChild(baseClass, getDirectory(path), jsonName, credentials);
+	}
+	
+	/**
+	 * Create a new instance of a {@link JSONFile}'s child class and returns it.<br/>
+	 * This instance is created without any content object (empty file)<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param baseClass A child class from {@link JSONFile} which will be returned
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param jsonName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file will be encrypted
+	 * @return a new instance of JSONFile
+	 * @throws UnsupportedJSONContainerException
+	 * @throws IOException
+	 */
+	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Directory directory, String jsonName, Optional<FileCredentials> credentials) throws IOException, UnsupportedJSONContainerException {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		try {
+			final Constructor<E> constructor = credentials.isPresent() ? 
+					baseClass.getConstructor(Directory.class, String.class, FileCredentials.class) :
+					baseClass.getConstructor(Directory.class, String.class);
+			
+			
+			return credentials.isPresent() ? constructor.newInstance(directory, jsonName, credentials.get()) : constructor.newInstance(directory, jsonName); 
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			final IOException thrownedE = new IOException("Cannot create instance of "+jsonName);
+			thrownedE.addSuppressed(e);
+			throw thrownedE;
+		}
+	}
+	
 	/*
 	 * Get MOBF File content methods
 	 */
@@ -319,12 +511,221 @@ public class IOFactory {
 	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
 	 * @param directoryID The id of the directory where the file will be stored
 	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
-	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(directoryID), mobfName, credentials);
+	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, ObjectDataType root, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(directoryID), mobfName, root, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link DataTypeRegistry} used by this function is {@link IOFactory#DEFAULT_MOBF_REGISTRY} <br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param path The path of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public MOBFFile createNewMOBFFile(Path path, String mobfName, ObjectDataType root, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(path), mobfName, root, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link DataTypeRegistry} used by this function is {@link IOFactory#DEFAULT_MOBF_REGISTRY} <br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param directory The {@link Directory} where the file is stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 */
+	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, ObjectDataType root, Optional<FileCredentials> credentials/*Unused for now*/) {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		return new MOBFFile(directory, mobfName, DEFAULT_MOBF_REGISTRY, MOBFFileHeader.DEFAULT_HEADER, root);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE}
+	 * @param directoryID The id of the directory where the file is stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, ObjectDataType root, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(directoryID), mobfName, root, registry, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param path The path of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public MOBFFile createNewMOBFFile(Path path, String mobfName, ObjectDataType root, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(path), mobfName, root, registry, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 */
+	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, ObjectDataType root, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		return new MOBFFile(directory, mobfName, registry, MOBFFileHeader.DEFAULT_HEADER, root);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(directoryID), mobfName, root, registry, fileHeader, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param path The path of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public MOBFFile createNewMOBFFile(Path path, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(path), mobfName, root, registry, fileHeader, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 */
+	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		return new MOBFFile(directory, mobfName, registry, fileHeader, root);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param fileCompression The {@link CompressionType} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(directoryID), mobfName, root, registry, fileHeader, fileCompression, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param path The path of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param fileCompression The {@link CompressionType} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 */
+	public MOBFFile createNewMOBFFile(Path path, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewMOBFFile(getDirectory(path), mobfName, root, registry, fileHeader, fileCompression, credentials);
+	}
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance
+	 * @param directory The {@link Directory} where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param root The root of the MOBF file to be created. Populate the file with initial data 
+	 * @param registry The list of {@link DataType} possibly present in the file
+	 * @param fileHeader The {@link MOBFFileHeader} used for the new file
+	 * @param fileCompression The {@link CompressionType} used for the new file
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 */
+	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, ObjectDataType root, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+		this.directoryManager.registerNewDirectoryIfAbsent(directory);
+		
+		return new MOBFFile(directory, mobfName, registry, fileHeader, fileCompression, root);
+	}
+	
+	
+	/**
+	 * Create a new instance of {@link MOBFFile} and returns it<br/>
+	 * No other action is performed except the creation of the instance<br/>
+	 * The {@link DataTypeRegistry} used by this function is {@link IOFactory#DEFAULT_MOBF_REGISTRY} <br/>
+	 * The {@link MOBFFileHeader} used by this function is {@link MOBFFileHeader#DEFAULT_HEADER} <br/>
+	 * The {@link CompressionType} used by this function is {@link CompressionType#NONE} 
+	 * @param directoryID The id of the directory where the file will be stored
+	 * @param mobfName The name of the file <strong>without extension</strong>
+	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
+	 * @return a new instance of MOBFFile
+	 * @see DirectoryManager#getLoadedDirectory(String)
+	 */
+	public MOBFFile createNewEmptyMOBFFile(String directoryID, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(directoryID), mobfName, credentials);
 	}
 	
 	/**
@@ -339,8 +740,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
-	public MOBFFile createNewMOBFFile(Path path, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(path), mobfName, credentials);
+	public MOBFFile createNewEmptyMOBFFile(Path path, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(path), mobfName, credentials);
 	}
 	
 	/**
@@ -354,7 +755,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
 	 */
-	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
+	public MOBFFile createNewEmptyMOBFFile(Directory directory, String mobfName, Optional<FileCredentials> credentials/*Unused for now*/) {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		
 		return new MOBFFile(directory, mobfName, DEFAULT_MOBF_REGISTRY, MOBFFileHeader.DEFAULT_HEADER);
@@ -372,8 +773,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
-	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, credentials);
+	public MOBFFile createNewEmptyMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(directoryID), mobfName, registry, credentials);
 	}
 	
 	/**
@@ -388,8 +789,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
-	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(path), mobfName, registry, credentials);
+	public MOBFFile createNewEmptyMOBFFile(Path path, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(path), mobfName, registry, credentials);
 	}
 	
 	/**
@@ -403,7 +804,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
 	 */
-	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
+	public MOBFFile createNewEmptyMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, Optional<FileCredentials> credentials/*Unused for now*/) {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		
 		return new MOBFFile(directory, mobfName, registry, MOBFFileHeader.DEFAULT_HEADER);
@@ -421,8 +822,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
-	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, credentials);
+	public MOBFFile createNewEmptyMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, credentials);
 	}
 	
 	/**
@@ -437,8 +838,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
-	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(path), mobfName, registry, fileHeader, credentials);
+	public MOBFFile createNewEmptyMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(path), mobfName, registry, fileHeader, credentials);
 	}
 	
 	/**
@@ -452,7 +853,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
 	 */
-	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
+	public MOBFFile createNewEmptyMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, Optional<FileCredentials> credentials/*Unused for now*/) {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		
 		return new MOBFFile(directory, mobfName, registry, fileHeader);
@@ -470,8 +871,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(String)
 	 */
-	public MOBFFile createNewMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, fileCompression, credentials);
+	public MOBFFile createNewEmptyMOBFFile(String directoryID, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(directoryID), mobfName, registry, fileHeader, fileCompression, credentials);
 	}
 	
 	/**
@@ -486,8 +887,8 @@ public class IOFactory {
 	 * @return a new instance of MOBFFile
 	 * @see DirectoryManager#getLoadedDirectory(Path)
 	 */
-	public MOBFFile createNewMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
-		return createNewMOBFFile(getDirectory(path), mobfName, registry, fileHeader, fileCompression, credentials);
+	public MOBFFile createNewEmptyMOBFFile(Path path, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+		return createNewEmptyMOBFFile(getDirectory(path), mobfName, registry, fileHeader, fileCompression, credentials);
 	}
 	
 	/**
@@ -501,7 +902,7 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted <strong>WIP</strong>
 	 * @return a new instance of MOBFFile
 	 */
-	public MOBFFile createNewMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
+	public MOBFFile createNewEmptyMOBFFile(Directory directory, String mobfName, DataTypeRegistry registry, MOBFFileHeader fileHeader, CompressionType fileCompression, Optional<FileCredentials> credentials/*Unused for now*/) {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		
 		return new MOBFFile(directory, mobfName, registry, fileHeader, fileCompression);
@@ -659,7 +1060,7 @@ public class IOFactory {
 	 * @throws IOException
 	 */
 	public JSONContainer getHttpContentAsJSON(String stringURL) throws IOException {
-		return getHttpContentAsJSON(new URL(stringURL));
+		return getHttpContentAsJSON(URI.create(stringURL).toURL());
 	}
 	
 	/**
