@@ -1,5 +1,6 @@
 package marshmalliow.core.json.objects;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -130,6 +131,26 @@ public class JSONObject extends ConcurrentHashMap<String, Object> implements JSO
 	public void clear() {
 		this.contentModified.set(true);
 		super.clear();
+	}
+	
+	@Override
+	public String toString() {
+		final Iterator<Entry<String, Object>> i = entrySet().iterator();
+		if (!i.hasNext()) return "{}";
+
+		final StringBuilder sb = new StringBuilder();
+		sb.append('{');
+		for (;;) {
+			final Entry<String, Object> e = i.next();
+			final Object value = e.getValue();
+			sb.append("\""+e.getKey()+"\"");
+			sb.append(':');
+			if (value == this) sb.append("this");
+			else sb.append(value instanceof String ? "\"" + value + "\"" : value);
+			
+			if (!i.hasNext()) return sb.append('}').toString();
+			sb.append(',').append(' ');
+		}
 	}
 
 	@Override

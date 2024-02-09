@@ -3,6 +3,7 @@ package marshmalliow.core.json.objects;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -15,7 +16,7 @@ public class JSONArray extends ArrayList<Object> implements JSONContainer {
 	private static final long serialVersionUID = 3593877469226039660L;
 	
 	private final AtomicBoolean contentModified = new AtomicBoolean(false);
-	private final Object mutex;
+	protected final Object mutex;
 	
 	public JSONArray(Object mutex) {
 		super();
@@ -73,6 +74,13 @@ public class JSONArray extends ArrayList<Object> implements JSONContainer {
 		synchronized (mutex) {
 			this.contentModified.set(true);
 			return super.addAll(index, c);
+		}
+	}
+	
+	@Override
+	public Object get(int index) {
+		synchronized (mutex) {
+			return super.get(index);
 		}
 	}
 	
@@ -232,6 +240,21 @@ public class JSONArray extends ArrayList<Object> implements JSONContainer {
     public <T> T[] toArray(IntFunction<T[]> f) {
         synchronized (mutex) {return super.toArray(f);}
     }
+	
+	@Override
+	public String toString() {
+		final Iterator<Object> it = iterator();
+		if (!it.hasNext()) return "[]";
+
+		final StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		for (;;) {
+			final Object e = it.next();
+			sb.append(e instanceof String ? "\"" + e + "\"" : e);
+			if (!it.hasNext()) return sb.append(']').toString();
+			sb.append(',').append(' ');
+		}
+	}
 	
 	@Override
 	public boolean equals(Object o) {
