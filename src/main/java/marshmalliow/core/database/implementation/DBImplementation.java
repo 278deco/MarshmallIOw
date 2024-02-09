@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
  */
 public abstract class DBImplementation {
 
-	protected final boolean autoClose;
+	protected boolean autoClose;
 
 	/**
 	 * Create a new {@link DBImplementation} instance.
@@ -27,6 +27,10 @@ public abstract class DBImplementation {
 		this.autoClose = autoClose;
 	}
 
+	public void setAutoClose(boolean autoClose) {
+		this.autoClose = autoClose;
+	}
+	
 	/**
 	 * Set the scope of all requests executed after this method for a specific database.
 	 * @param dbName The name of the database to be used
@@ -158,7 +162,7 @@ public abstract class DBImplementation {
 	 * @return the response from the database
 	 * @throws SQLException
 	 */
-	public abstract <E> List<List<E>> insertWithResult(String request, List<String> arguments, Class<E> returnType) throws SQLException;
+	public abstract <E> List<List<E>> insertWithResult(String request, List<Object> arguments, Class<E> returnType) throws SQLException;
 	
 	/**
 	 * Create a {@code INSERT} SQL Request to be performed onto the database.<br/>
@@ -263,6 +267,14 @@ public abstract class DBImplementation {
 	 */
 	public abstract int count(String request, Map<String, Object> arguments) throws SQLException;
 
+	public abstract void batch(List<String> requests) throws SQLException;
+	
+	public abstract List<List<Object>> batchWithResult(List<String> requests) throws SQLException;
+	
+	public abstract <E> List<List<E>> batchWithResult(List<String> requests, Class<E> castingType) throws SQLException;
+	
+	public abstract void preparedBatch(List<String> requests, List<List<Object>> arguments) throws SQLException;
+	
 	/**
 	 * Close the current connection established with database.<br/>
 	 * This method doesn't needs to be called from method handling the closing of the database when {@link #autoClose} is on.<br/>

@@ -1,25 +1,25 @@
-package marshmalliow.core.database.implementation;
+	package marshmalliow.core.database.implementation;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.mariadb.r2dbc.api.MariadbConnection;
-import org.mariadb.r2dbc.api.MariadbResult;
-import org.mariadb.r2dbc.api.MariadbStatement;
-
+import io.r2dbc.spi.Batch;
+import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.Result;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.Statement;
+import marshmalliow.core.database.objects.NullValue;
 import marshmalliow.core.database.utils.DatabaseType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MariaDBImplementation extends DBImplementation {
 
-	private MariadbConnection connection;
+	private Connection connection;
 
-	public MariaDBImplementation(Mono<MariadbConnection> dbConnection, boolean autoClose) throws Exception {
+	public MariaDBImplementation(Mono<Connection> dbConnection, boolean autoClose) throws Exception {
 		super(autoClose);
 
 		this.connection = dbConnection.block();
@@ -27,7 +27,10 @@ public class MariaDBImplementation extends DBImplementation {
 	
 	@Override
 	public void setDatabase(String dbName) throws SQLException {
-		this.connection.setDatabase(dbName).block();
+		Mono.from(
+			this.connection.createStatement("USE "+dbName+";").execute()
+		).subscribe();
+	
 	}
 	
 	/**
@@ -36,52 +39,57 @@ public class MariaDBImplementation extends DBImplementation {
 	 * @param request the SQL of the statement
 	 * @return a new {@link Statement} instance
 	 * @throws SQLException
-	 * @see MariadbConnection#createStatement(String)
+	 * @see Connection#createStatement(String)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public MariadbStatement createStatement(String request) throws SQLException {
+	public Statement createStatement(String request) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
 		return this.connection.createStatement(request);
 	}
 
 	@Override
-	public Flux<MariadbResult> createStatement(String request, List<Object> arguments) throws SQLException {
+	public Flux<Result> createStatement(String request, List<Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 
-
-		return statement.execute();
+		return Flux.from(statement.execute());
 	}
 
 	@Override
-	public Flux<MariadbResult> createStatement(String request, Map<String, Object> arguments) throws SQLException {
+	public Flux<Result> createStatement(String request, Map<String, Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
-		return statement.execute();
+		return Flux.from(statement.execute());
 	}
 
 	@Override
 	public <E> List<List<E>> select(String request, List<Object> arguments, Class<E> returnType) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 		
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, returnType));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, returnType));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -91,13 +99,17 @@ public class MariaDBImplementation extends DBImplementation {
 	public <E> List<List<E>> select(String request, Map<String, Object> arguments, Class<E> returnType) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
-
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
+		
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, returnType));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, returnType));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -107,15 +119,17 @@ public class MariaDBImplementation extends DBImplementation {
 	public List<List<Object>> select(String request, List<Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 		
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, Object.class));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, Object.class));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -125,11 +139,15 @@ public class MariaDBImplementation extends DBImplementation {
 	public List<List<Object>> select(String request, Map<String, Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
 		try {
-			return statement.execute().flatMap(result -> {
+			return Flux.from(statement.execute())
+			.flatMap(result -> {
 				return result.map((row, metadata) -> rowIterator(row, Object.class));
 			}).collectList().block();
 		}finally {
@@ -144,18 +162,20 @@ public class MariaDBImplementation extends DBImplementation {
 	}
 
 	@Override
-	public <E> List<List<E>> insertWithResult(String request, List<String> arguments, Class<E> returnType) throws SQLException {
+	public <E> List<List<E>> insertWithResult(String request, List<Object> arguments, Class<E> returnType) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, returnType));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, returnType));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -165,15 +185,17 @@ public class MariaDBImplementation extends DBImplementation {
 	public List<List<Object>> insertWithResult(String request, List<Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, Object.class));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, Object.class));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -188,13 +210,17 @@ public class MariaDBImplementation extends DBImplementation {
 	public <E> List<List<E>> insertWithResult(String request, Map<String, Object> arguments, Class<E> returnType) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, returnType));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, returnType));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -204,13 +230,17 @@ public class MariaDBImplementation extends DBImplementation {
 	public List<List<Object>> insertWithResult(String request, Map<String, Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
 		try {
-			return statement.execute().flatMap(result -> {
-				return result.map((row, metadata) -> rowIterator(row, Object.class));
-			}).collectList().block();
+			return Flux.from(statement.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, Object.class));
+					}).collectList().block();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -238,13 +268,16 @@ public class MariaDBImplementation extends DBImplementation {
 
 	@Override
 	public int count(String request, List<Object> arguments) throws SQLException {
-		final MariadbStatement statement = this.connection.createStatement(request);
+		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+
+		final Statement statement = this.connection.createStatement(request);
 		for(int i = 0; i < arguments.size(); i++) {
-			statement.bind(i, arguments.get(i));
+			if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+			else statement.bind(i, arguments.get(i));
 		}
 
 		try {
-			return statement.execute().flatMap(result -> result.map(row -> {
+			return Flux.from(statement.execute()).flatMap(result -> result.map(row -> {
 				return row.get(0, Integer.class);
 			})).blockFirst();
 		}finally {
@@ -254,17 +287,101 @@ public class MariaDBImplementation extends DBImplementation {
 
 	@Override
 	public int count(String request, Map<String, Object> arguments) throws SQLException {
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
 		try {
-			return statement.execute().flatMap(result -> result.map(row -> {
+			return Flux.from(statement.execute()).flatMap(result -> result.map(row -> {
 				return row.get(0, Integer.class);
 			})).blockFirst();
+		}finally {	
+			if(this.autoClose) closeConnection();
+		}
+	}
+	
+	public void batch(List<String> requests) throws SQLException {
+		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+
+		try { 
+			final Batch batch = this.connection.createBatch();
+			
+			for (String request : requests) {
+				batch.add(request);
+			}
+			
+			Mono.from(batch.execute()).subscribe();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
 	}
+	
+	public List<List<Object>> batchWithResult(List<String> requests) throws SQLException {
+		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+		try {
+			final Batch batch = this.connection.createBatch();
+			
+			for(String request : requests) {
+				batch.add(request);
+			}
+		
+			return Flux.from(batch.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, Object.class));
+					}).collectList().block();
+		}finally {
+			if(this.autoClose) closeConnection();
+		}
+	}
+	
+	public <E> List<List<E>> batchWithResult(List<String> requests, Class<E> castingType) throws SQLException {
+		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+
+		final Batch batch = this.connection.createBatch();
+		
+		for (String request : requests) {
+			batch.add(request);
+		}
+		
+		try {
+			return Flux.from(batch.execute())
+					.flatMap(result -> {
+						return result.map((row, metadata) -> rowIterator(row, castingType));
+					}).collectList().block();
+		}finally {
+			if(this.autoClose) closeConnection();
+		}
+	}
+	
+	public void preparedBatch(List<String> requests, List<List<Object>> arguments) throws SQLException {
+        if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
+        if(requests.size() != arguments.size()) throw new IllegalArgumentException("Incorrect number of arguments and requests for the prepared batch");
+
+        try {
+			Mono.from(this.connection.beginTransaction())
+				.doOnNext(success -> {
+				for(int i = 0; i < requests.size(); i++) {
+					final List<Object> argObj = arguments.get(i);
+					final Statement statement = this.connection.createStatement(requests.get(i));
+					
+                    for(int argIndex = 0; argIndex < argObj.size(); argIndex++) {
+                    	if (argObj.get(argIndex) instanceof NullValue) statement.bindNull(argIndex, ((NullValue) argObj.get(i)).getType());
+            			else statement.bind(i, argObj.get(argIndex));
+                    }
+                    
+                    Mono.from(statement.execute()).block();
+                }
+
+			}).then(Mono.from(this.connection.commitTransaction()))
+			.subscribe();
+		}finally {
+			if(this.autoClose) closeConnection();
+		}
+    }
 	
 	private <E> List<E> rowIterator(Row row, Class<E> castingClass) {
 		final List<E> rowResult = new ArrayList<>();
@@ -286,12 +403,15 @@ public class MariaDBImplementation extends DBImplementation {
 	private void executeRequest(String request, List<Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 		try {
-			final MariadbStatement statement = this.connection.createStatement(request);
+			final Statement statement = this.connection.createStatement(request);
 			for(int i = 0; i < arguments.size(); i++) {
-				statement.bind(i, arguments.get(i));
+				if (arguments.get(i) instanceof NullValue) statement.bindNull(i, ((NullValue) arguments.get(i)).getType());
+				else statement.bind(i, arguments.get(i));
 			}
 	
-			statement.execute().then().block();
+			Mono.from(
+				statement.execute()
+			).subscribe();
 		}finally {
 			if(this.autoClose) closeConnection();
 		}
@@ -300,10 +420,15 @@ public class MariaDBImplementation extends DBImplementation {
 	private void executeRequest(String request, Map<String, Object> arguments) throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
 
-		final MariadbStatement statement = this.connection.createStatement(request);
-		arguments.forEach((key, value) -> statement.bind(key, value));
+		final Statement statement = this.connection.createStatement(request);
+		arguments.forEach((key, value) -> {
+			if (arguments.get(key) instanceof NullValue) statement.bindNull(key, ((NullValue) arguments.get(key)).getType());
+            else statement.bind(key, value);
+		});
 
-		statement.execute().then().block();
+		Mono.from(
+			statement.execute()
+		).subscribe();
 
 		if(this.autoClose) closeConnection();
 	}
@@ -312,7 +437,9 @@ public class MariaDBImplementation extends DBImplementation {
 	public void closeConnection() throws SQLException {
 		if(this.connection == null) throw new SQLException("Cannot close a non-existing connection");
 
-		this.connection.close().then().block();
+		Mono.from(
+			this.connection.close()
+		).subscribe();
 	}
 
 	@Override
