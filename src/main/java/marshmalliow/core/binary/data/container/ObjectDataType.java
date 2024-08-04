@@ -1,4 +1,4 @@
-package marshmalliow.core.binary.data.types.container;
+package marshmalliow.core.binary.data.container;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
 
-import marshmalliow.core.binary.data.types.DataType;
+import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;

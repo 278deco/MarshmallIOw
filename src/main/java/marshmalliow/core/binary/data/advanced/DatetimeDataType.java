@@ -1,42 +1,48 @@
-package marshmalliow.core.binary.data.types.advanced;
+package marshmalliow.core.binary.data.advanced;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 
-import marshmalliow.core.binary.data.types.DataType;
+import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
 import marshmalliow.core.io.BinaryReader;
 import marshmalliow.core.io.BinaryWriter;
+import marshmalliow.core.objects.DateTime;
 
 /**
- * String data type corresponding to the format specification.
+ * Datetime data type corresponding to the format specification.
  * @version	1.0.0
  * @author 278deco
  */
-public class StringDataType extends DataType<String> {
+public class DatetimeDataType extends DataType<DateTime> {
 
-	public StringDataType() {
+	public DatetimeDataType() {
 		super();
 	}
 
-	public StringDataType(String name, String value) {
+	public DatetimeDataType(String name) {
+		super(name, DateTime.fromZonedDateTime(ZonedDateTime.now()));
+	}
+
+	public DatetimeDataType(String name, DateTime value) {
 		super(name, value);
 	}
 
 	@Override
 	public void writeValue(BinaryWriter writer, DataTypeRegistry registry, Charset charset) throws IOException {
-		writer.writeUTF(this.getValue(), charset);
+		writer.writeDatetime(this.getValue());
 	}
 
 	@Override
 	public void readValue(BinaryReader reader, DataTypeRegistry registry, Charset charset) throws IOException {
-		this.setValue(reader.readUTF(charset));
+		this.setValue(reader.readDatetime());
 	}
 
 	@Override
 	public byte getId() {
-		return DataTypeEnum.STRING.getId();
+		return DataTypeEnum.DATETIME.getId();
 	}
 	
 	@Override

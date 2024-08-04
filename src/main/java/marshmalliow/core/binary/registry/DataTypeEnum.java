@@ -3,18 +3,18 @@ package marshmalliow.core.binary.registry;
 
 import org.apache.logging.log4j.Logger;
 
-import marshmalliow.core.binary.data.types.advanced.DatetimeDataType;
-import marshmalliow.core.binary.data.types.advanced.StringDataType;
-import marshmalliow.core.binary.data.types.container.ArrayDataType;
-import marshmalliow.core.binary.data.types.container.ListDataType;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
-import marshmalliow.core.binary.data.types.primitive.BooleanDataType;
-import marshmalliow.core.binary.data.types.primitive.ByteDataType;
-import marshmalliow.core.binary.data.types.primitive.DoubleDataType;
-import marshmalliow.core.binary.data.types.primitive.FloatDataType;
-import marshmalliow.core.binary.data.types.primitive.IntegerDataType;
-import marshmalliow.core.binary.data.types.primitive.LongDataType;
-import marshmalliow.core.binary.data.types.primitive.ShortDataType;
+import marshmalliow.core.binary.data.advanced.DatetimeDataType;
+import marshmalliow.core.binary.data.advanced.StringDataType;
+import marshmalliow.core.binary.data.container.ArrayDataType;
+import marshmalliow.core.binary.data.container.ListDataType;
+import marshmalliow.core.binary.data.container.ObjectDataType;
+import marshmalliow.core.binary.data.primitive.BooleanDataType;
+import marshmalliow.core.binary.data.primitive.ByteDataType;
+import marshmalliow.core.binary.data.primitive.DoubleDataType;
+import marshmalliow.core.binary.data.primitive.FloatDataType;
+import marshmalliow.core.binary.data.primitive.IntegerDataType;
+import marshmalliow.core.binary.data.primitive.LongDataType;
+import marshmalliow.core.binary.data.primitive.ShortDataType;
 import marshmalliow.core.exceptions.DatatypeRegistryException;
 
 public enum DataTypeEnum {

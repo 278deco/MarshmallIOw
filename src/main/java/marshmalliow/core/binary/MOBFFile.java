@@ -11,7 +11,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import marshmalliow.core.binary.data.MOBFFileHeader;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
+import marshmalliow.core.binary.data.container.ObjectDataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;

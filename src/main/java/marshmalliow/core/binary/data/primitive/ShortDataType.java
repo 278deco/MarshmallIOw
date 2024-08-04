@@ -1,8 +1,8 @@
-package marshmalliow.core.binary.data.types.primitive;
+package marshmalliow.core.binary.data.primitive;
 
 import java.io.IOException;
 
-import marshmalliow.core.binary.data.types.DataType;
+import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;

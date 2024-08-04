@@ -20,9 +20,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import marshmalliow.core.binary.MOBFFile;
+import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.data.MOBFFileHeader;
-import marshmalliow.core.binary.data.types.DataType;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
+import marshmalliow.core.binary.data.container.ObjectDataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;

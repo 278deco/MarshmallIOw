@@ -1,4 +1,4 @@
-package marshmalliow.core.binary.data.types;
+package marshmalliow.core.binary.data;
 
 import java.io.IOException;
 import java.util.Objects;
