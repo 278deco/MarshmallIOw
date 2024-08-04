@@ -11,6 +11,26 @@ import java.util.Optional;
 
 import marshmalliow.core.binary.utils.ComplementaryType;
 
+/**
+ * This class is a representation of a date and time object. It is composed of 9 fields:
+ * <ul>
+ *     <li>Year as {@code short}</li>
+ *     <li>Month as {@code byte}</li>
+ *     <li>Day of month as {@code byte}</li>
+ *     <li>Hour as {@code byte}</li>
+ *     <li>Minute as {@code byte}</li>
+ *     <li>Second as {@code byte}</li>
+ *     <li>Complementary type as {@code byte}</li>
+ *     <li>Complementary data as {@code short}</li>
+ *     <li>Timezone as {@code ZoneId}</li>
+ *     <li>Timezone offset as {@code ZoneOffset}</li>
+ * </ul>
+ * This class is immutable and can be created using the {@link DateTime.Builder} class.<br/>
+ * This class is in compliance with MOBF specifications.
+ * 
+ * @version 1.0.0
+ * @author 278deco
+ */
 public class DateTime {
 
 	public static final int FIELDS_NUMBER = 9;
@@ -134,10 +154,19 @@ public class DateTime {
 		return Optional.ofNullable(this.timezoneOffset);
 	}
 
+	/**
+	 * Check if the timezone is present. A timezone is present if both the timezone and the offset are present.
+	 * @return {@code true} if the timezone is present, {@code false} otherwise
+	 */
 	public boolean isTimezonePresent() {
 		return this.timezone != null && this.timezoneOffset != null;
 	}
 
+	/**
+	 * Convert this instance of {@code DateTime} to a {@link LocalDate}. <br/>
+	 * If the year, month and dayOfMonth are not present, the method will return an empty {@link Optional}.
+	 * @return an {@code Optional} of {@code LocalDate}
+	 */
 	public Optional<LocalDate> asLocalDate() {
 		if(this.year != -1 && this.month != -1 && this.dayOfMonth != -1) {
 			return Optional.of(LocalDate.of(this.year, this.month, this.dayOfMonth));
@@ -146,6 +175,15 @@ public class DateTime {
 		}
 	}
 
+	/**
+	 * Convert this instance of {@code DateTime} to a {@link LocalTime}. <br/>
+	 * If the hour, minute and second are not present, the method will return an
+	 * empty {@link Optional}.<br/>
+	 * If the complementary type and value are present, 
+	 * the method will return a {@code LocalTime} with the complementary value. (milliseconds, microseconds, nanoseconds).
+	 * 
+	 * @return an {@code Optional} of {@code LocalTime}
+	 */
 	public Optional<LocalTime> asLocalTime() {
 		if(this.hour != -1 && this.minute != -1 && this.second != -1) {
 			if(this.complementaryType != null && this.complementary != -1) {
@@ -158,6 +196,16 @@ public class DateTime {
 		}
 	}
 
+	/**
+	 * Convert this instance of {@code DateTime} to a {@link LocalDateTime}.<br/>
+	 * If the year, month, dayOfMonth, hour, minute and second are not present, the
+	 * method will return an empty {@link Optional}.<br/>
+	 * If the complementary type and value are present, the method will return a
+	 * {@code LocalDateTime} with the complementary value. (milliseconds,
+	 * microseconds, nanoseconds).
+	 * 
+	 * @return an {@code Optional} of {@code LocalDateTime}
+	 */
 	public Optional<LocalDateTime> asLocalDateTime() {
 		if(this.year != -1 && this.month != -1 && this.dayOfMonth != -1 && this.hour != -1 && this.minute != -1 && this.second != -1) {
 			if(this.complementaryType != null && this.complementary != -1) {
@@ -170,6 +218,17 @@ public class DateTime {
 		}
 	}
 
+	/**
+	 * Convert this instance of {@code DateTime} to a {@link ZonedDateTime}.<br/>
+	 * If the year, month, dayOfMonth, hour, minute, second and timezone are not present, the
+	 * method will return an empty {@link Optional}.<br/>
+	 * If the complementary type and value are present, the method will return a
+	 * {@code ZonedDateTime} with the complementary value. (milliseconds,
+	 * microseconds, nanoseconds).
+	 * 
+	 * @see #asLocalDateTime()
+	 * @return an {@code Optional} of {@code ZonedDateTime}
+	 */
 	public Optional<ZonedDateTime> asZonedDateTime() {
 		final Optional<LocalDateTime> ldt = this.asLocalDateTime();
 		if(ldt.isPresent() && this.timezone != null) {
@@ -179,10 +238,21 @@ public class DateTime {
 		}
 	}
 
+	/**
+	 * Create a new instance of {@code DateTime.Builder}. 
+	 * 
+	 * @return a new instance of {@code DateTime.Builder}
+	 */
 	public static DateTime.Builder builder() {
 		return new DateTime.Builder();
 	}
 
+	/**
+	 * Create a new instance of {@code DateTime} from a {@link LocalDate} object.
+	 * 
+	 * @param date the {@code LocalDate} object
+	 * @return a new instance of {@code DateTime}
+	 */
 	public static final DateTime fromLocalDate(LocalDate date) {
 		return DateTime.builder()
 				.year(date.getYear())
@@ -191,6 +261,12 @@ public class DateTime {
 				.build();
 	}
 
+	/**
+	 * Create a new instance of {@code DateTime} from a {@link LocalTime} object.
+	 * 
+	 * @param time the {@code LocalTime} object
+	 * @return a new instance of {@code DateTime}
+	 */
 	public static final DateTime fromLocalTime(LocalTime time) {
 		return DateTime.builder()
 				.hour((byte)time.getHour())
@@ -199,6 +275,13 @@ public class DateTime {
 				.build();
 	}
 
+	/**
+	 * Create a new instance of {@code DateTime} from a {@link LocalDateTime}
+	 * object.
+	 * 
+	 * @param dt the {@code LocalDateTime} object
+	 * @return a new instance of {@code DateTime}
+	 */
 	public static final DateTime fromLocalDateTime(LocalDateTime dt) {
 		return fromLocalDateTimeBuilder(dt).build();
 	}
@@ -224,6 +307,13 @@ public class DateTime {
 		return builder;
 	}
 
+	/**
+	 * Create a new instance of {@code DateTime} from a {@link ZonedDateTime}
+	 * object.
+	 * 
+	 * @param zdt the {@code ZonedDateTime} object
+	 * @return a new instance of {@code DateTime}
+	 */
 	public static final DateTime fromZonedDateTime(ZonedDateTime zdt) {
 		return fromLocalDateTimeBuilder(zdt.toLocalDateTime())
 				.timezone(zdt.getZone(), zdt.getOffset())
