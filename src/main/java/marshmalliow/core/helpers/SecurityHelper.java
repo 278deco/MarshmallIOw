@@ -32,6 +32,11 @@ public class SecurityHelper {
 
 	public static final int ITERATION_COUNT_DEFAULT = 65536;
 	
+	/**
+	 * Generates a random salt of the specified {@link SaltSize}.
+	 * @param size The size of the salt to generate.
+	 * @return A byte array containing the generated salt.
+	 */
 	public static byte[] generateSalt(SaltSize size) {
 		final byte[] vector = new byte[size.getSize()];
 		new SecureRandom().nextBytes(vector);
@@ -39,6 +44,12 @@ public class SecurityHelper {
 		return vector;
 	}
 	
+	/**
+     * Generates a random salt of the specified {@link SaltSize} using the provided seed.
+     * @param seed The seed to use for generating the salt.
+     * @param size The size of the salt to generate.
+     * @return A byte array containing the generated salt.
+     */
 	public static byte[] generateSalt(byte[] seed, SaltSize size) {
 		final byte[] vector = new byte[size.getSize()];
 		new SecureRandom(seed).nextBytes(vector);
@@ -46,6 +57,13 @@ public class SecurityHelper {
 		return vector;
 	}
 	
+	/**
+	 * Generates a random AES key of the specified {@link AESKeySize}.
+	 * 
+	 * @param size The size of the key to generate.
+	 * @return A {@link SecretKey} containing the generated key.
+	 * @throws NoSuchAlgorithmException If the algorithm used to generate the key is not found.
+	 */
 	public static SecretKey getAESKey(AESKeySize size) throws NoSuchAlgorithmException {
 		final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(size.getSize(), SecureRandom.getInstanceStrong());
@@ -53,6 +71,17 @@ public class SecurityHelper {
 		return keyGen.generateKey();
 	}
 	
+	/**
+	 * Generates an AES key of the specified {@link AESKeySize} using a password and
+	 * salt.
+	 * 
+	 * @param size     The size of the key to generate.
+	 * @param password The password to use for generating the key.
+	 * @param salt     The salt to use for generating the key.
+	 * @return A {@link SecretKey} containing the generated key.
+	 * @throws NoSuchAlgorithmException If the algorithm used to generate the key is not found.
+	 * @throws InvalidKeySpecException  If the key specification is invalid.
+	 */
 	public static SecretKey getAESKeyFromPassword(AESKeySize size, char[] password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 		final KeySpec spec = new PBEKeySpec(password, salt, ITERATION_COUNT_DEFAULT, size.getSize());
@@ -60,6 +89,16 @@ public class SecurityHelper {
 		return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
 	}
 	
+	/**
+	 * Encrypts the data from the specified input stream using the provided cipher
+	 * and writes the encrypted data to the output stream.
+	 * 
+	 * @param cipher The cipher to use for encryption.
+	 * @param in     The input stream to read the data from.
+	 * @param out    The output stream to write the encrypted data to.
+	 * @return A {@link CipherOutputStream} containing the encrypted data.
+	 * @throws IOException If an I/O error occurs.
+	 */
 	public static BufferedWriter encryptWithAESGCM(Cipher cipher, OutputStream out, FileCredentials credentials, int tagSize) throws InvalidKeyException, InvalidAlgorithmParameterException, IOException {
 		byte[] iv = SecurityHelper.generateSalt(credentials.getInitVectorSize());
 		out.write(iv);
@@ -70,6 +109,16 @@ public class SecurityHelper {
 		return new BufferedWriter(new OutputStreamWriter(cipherOut, "UTF-8"));
 	}
 	
+	/**
+	 * Decrypts the data from the specified input stream using the provided cipher
+	 * and writes the decrypted data to the output stream.
+	 * 
+	 * @param cipher The cipher to use for decryption.
+	 * @param in     The input stream to read the encrypted data from.
+	 * @param out    The output stream to write the decrypted data to.
+	 * @return A {@link CipherInputStream} containing the decrypted data.
+	 * @throws IOException If an I/O error occurs.
+	 */
 	public static BufferedReader decryptWithAESGCM(Cipher cipher, InputStream in, FileCredentials credentials, int tagSize) throws InvalidKeyException, InvalidAlgorithmParameterException, IOException {
 		final byte[] fileIv = new byte[credentials.getInitVectorSize().getSize()];
 		in.read(fileIv);
