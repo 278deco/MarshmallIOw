@@ -1,4 +1,4 @@
-package marshmalliow.core.json.exceptions;
+package marshmalliow.core.exceptions;
 
 public class JSONDepthException extends JSONParseException {
 

@@ -3,7 +3,7 @@ package marshmalliow.core.json.assertions;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
-import marshmalliow.core.json.exceptions.JSONAssertionException;
+import marshmalliow.core.exceptions.JSONAssertionException;
 import marshmalliow.core.json.objects.JSONContainer;
 
 public class JSONAssertion {

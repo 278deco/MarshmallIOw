@@ -1,4 +1,4 @@
-package marshmalliow.core.json.exceptions;
+package marshmalliow.core.exceptions;
 
 import marshmalliow.core.json.assertions.AssertionType;
 

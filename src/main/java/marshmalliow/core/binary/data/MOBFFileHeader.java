@@ -3,8 +3,8 @@ package marshmalliow.core.binary.data;
 import java.io.IOException;
 import java.util.Arrays;
 
-import marshmalliow.core.binary.exceptions.MalformedHeaderException;
 import marshmalliow.core.binary.utils.Charset;
+import marshmalliow.core.exceptions.MalformedHeaderException;
 import marshmalliow.core.io.BinaryReader;
 import marshmalliow.core.io.BinaryWriter;
 

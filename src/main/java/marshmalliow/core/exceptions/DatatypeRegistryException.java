@@ -1,4 +1,4 @@
-package marshmalliow.core.binary.exceptions;
+package marshmalliow.core.exceptions;
 
 public class DatatypeRegistryException extends Exception {
 

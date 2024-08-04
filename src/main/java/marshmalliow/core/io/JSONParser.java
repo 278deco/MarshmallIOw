@@ -1,7 +1,7 @@
 package marshmalliow.core.io;
 
-import marshmalliow.core.json.exceptions.JSONDepthException;
-import marshmalliow.core.json.exceptions.JSONParseException;
+import marshmalliow.core.exceptions.JSONDepthException;
+import marshmalliow.core.exceptions.JSONParseException;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;

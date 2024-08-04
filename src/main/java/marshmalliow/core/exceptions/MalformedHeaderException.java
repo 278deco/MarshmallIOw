@@ -1,4 +1,4 @@
-package marshmalliow.core.binary.exceptions;
+package marshmalliow.core.exceptions;
 
 import java.io.IOException;
 import java.util.Arrays;
