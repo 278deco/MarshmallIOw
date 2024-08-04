@@ -11,6 +11,11 @@ import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
 import marshmalliow.core.objects.DateTime;
 
+/**
+ * Datetime data type corresponding to the format specification.
+ * @version	1.0.0
+ * @author 278deco
+ */
 public class DatetimeDataType extends DataType<DateTime> {
 
 	public DatetimeDataType() {

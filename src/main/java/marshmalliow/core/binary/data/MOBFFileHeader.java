@@ -22,6 +22,11 @@ public class MOBFFileHeader {
 	private Charset encodingCharset;
 	private int version; //unsigned byte
 
+	/**
+	 * Given a {@link BinaryReader}, reads and ensure the validity of the header
+	 * @param reader The binary reader instance
+	 * @throws IOException
+	 */
 	public MOBFFileHeader(BinaryReader reader) throws IOException {
 		reader.read(signature, 0, 4);
 		if(!Arrays.equals(signature, MOBF_FILE_SIGNATURE))
@@ -39,12 +44,22 @@ public class MOBFFileHeader {
 			throw new MalformedHeaderException("Incorrect header ending");
 	}
 
+	/**
+	 * Creates a new MOBF File Header with the given encoding charset and version
+	 * @param encoding The encoding charset used
+	 * @param version The version of the MOBF File Format
+	 */
 	public MOBFFileHeader(Charset encoding, int version) {
 		System.arraycopy(MOBF_FILE_SIGNATURE, 0, this.signature, 0, 4);
 		this.encodingCharset = encoding;
 		this.version = version;
 	}
 
+	/**
+	 * Given a {@link BinaryWriter}, writes the header to the output
+	 * @param writer The binary writer instance
+	 * @throws IOException
+	 */
 	public void write(BinaryWriter writer) throws IOException {
 		writer.write(this.signature, 0, 4);
 

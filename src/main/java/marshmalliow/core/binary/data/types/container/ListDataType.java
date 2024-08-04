@@ -15,6 +15,11 @@ import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
 
+/**
+ * List data type corresponding to the format specification.
+ * @version	1.0.0
+ * @author 278deco
+ */
 public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 
 	private final Object lock = new Object();

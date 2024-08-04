@@ -14,6 +14,11 @@ import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
 
+/**
+ * Object data type corresponding to the format specification.
+ * @version	1.0.0
+ * @author 278deco
+ */
 public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 
 	private final Object lock = new Object();
