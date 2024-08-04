@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import marshmalliow.core.binary.exceptions.MalformedHeaderException;
-import marshmalliow.core.binary.io.BinaryReader;
-import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.utils.Charset;
+import marshmalliow.core.io.BinaryReader;
+import marshmalliow.core.io.BinaryWriter;
 
 public class MOBFFileHeader {
 

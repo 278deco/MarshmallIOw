@@ -1,4 +1,4 @@
-package marshmalliow.core.binary.io;
+package marshmalliow.core.io;
 
 import java.io.EOFException;
 import java.io.IOException;

@@ -5,11 +5,11 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
 import marshmalliow.core.binary.data.types.DataType;
-import marshmalliow.core.binary.io.BinaryReader;
-import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
+import marshmalliow.core.io.BinaryReader;
+import marshmalliow.core.io.BinaryWriter;
 
 /**
  * Array data type corresponding to the format specification.

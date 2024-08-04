@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 
 import marshmalliow.core.binary.data.types.DataType;
-import marshmalliow.core.binary.io.BinaryReader;
-import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
+import marshmalliow.core.io.BinaryReader;
+import marshmalliow.core.io.BinaryWriter;
 import marshmalliow.core.objects.DateTime;
 
 /**

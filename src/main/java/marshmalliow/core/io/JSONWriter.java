@@ -1,4 +1,4 @@
-package marshmalliow.core.json.io;
+package marshmalliow.core.io;
 
 import java.io.IOException;
 import java.io.Writer;

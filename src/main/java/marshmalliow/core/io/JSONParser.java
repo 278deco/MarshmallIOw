@@ -1,4 +1,4 @@
-package marshmalliow.core.json.io;
+package marshmalliow.core.io;
 
 import marshmalliow.core.json.exceptions.JSONDepthException;
 import marshmalliow.core.json.exceptions.JSONParseException;

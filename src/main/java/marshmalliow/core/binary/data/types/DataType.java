@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import marshmalliow.core.binary.io.BinaryReader;
-import marshmalliow.core.binary.io.BinaryWriter;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.Charset;
+import marshmalliow.core.io.BinaryReader;
+import marshmalliow.core.io.BinaryWriter;
 
 /**
  * Abstract class that represents a data type<br/>
