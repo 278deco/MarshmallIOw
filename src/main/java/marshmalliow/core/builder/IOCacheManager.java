@@ -29,7 +29,7 @@ public class IOCacheManager {
 	/**
 	 * Get the instance of {@link IOCacheManager} as a singleton
 	 * IF no instance is found, create it
-	 * @return the instance of DBFactory or null
+	 * @return the instance of IOCacheManager or null
 	 */
 	public static IOCacheManager get() {
 		if(instance == null) {
@@ -54,7 +54,7 @@ public class IOCacheManager {
 				throw new IdentifierAlreadyUsedException("Identifier "+obj.getFileName()+" is already used by a registred file");
 			}
 		}finally {
-			LOCK.writeLock().unlock();;
+			LOCK.writeLock().unlock();
 		}
 		
 	}
@@ -73,7 +73,7 @@ public class IOCacheManager {
 				throw new IdentifierAlreadyUsedException("Identifier "+obj.getFileName()+" is already used by a registred file");
 			}
 		}finally {
-			LOCK.writeLock().unlock();;
+			LOCK.writeLock().unlock();
 		}
 	}
 	
@@ -88,7 +88,7 @@ public class IOCacheManager {
 			LOCK.writeLock().lock();
 			this.files.put(obj.getFileName(), obj);
 		}finally {
-			LOCK.writeLock().unlock();;
+			LOCK.writeLock().unlock();
 		}
 	}
 	
@@ -105,7 +105,7 @@ public class IOCacheManager {
 			LOCK.writeLock().lock();
 			this.files.put(identifier, obj);
 		}finally {
-			LOCK.writeLock().unlock();;
+			LOCK.writeLock().unlock();
 		}
 	}
 	
@@ -120,7 +120,7 @@ public class IOCacheManager {
 			LOCK.writeLock().lock();
 			return this.files.remove(identifier) != null;
 		}finally {
-			LOCK.writeLock().unlock();;
+			LOCK.writeLock().unlock();
 		}
 	}
 	
