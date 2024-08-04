@@ -90,7 +90,6 @@ public class JSONParser {
 		String lastTokenName = null;
 		do {
 			token = lexer.nextToken();
-			
 			switch (token.getType()) {
 				case LEFT_BRACE:
 					if(state == VALUE_NAME) {

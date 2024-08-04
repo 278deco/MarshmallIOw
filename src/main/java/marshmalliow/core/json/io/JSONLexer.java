@@ -155,6 +155,11 @@ public class JSONLexer {
 		
 		incBuffer(1); //Skip the starting quotation mark
 		
+		//If the string is empty return immediately
+		if(this.buffer[this.bufferIndex] == '\"') {
+			return new JSONToken(JSONTokenEnum.VALUE_STRING, "");
+		}
+		
 		boolean strEnd = false;
 		while(!strEnd) {
 			strbuff[strPos++] = this.buffer[this.bufferIndex];
