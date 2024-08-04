@@ -10,14 +10,14 @@ import marshmalliow.core.binary.utils.Charset;
 
 public class MOBFFileHeader {
 
-	public static final MOBFFileHeader DEFAULT_HEADER = new MOBFFileHeader(Charset.UTF8, 1);
-	
 	/**
 	 * Official signature for the MOBF File Format<br/>
-	 * Cannot recognize a file if the signature isn't present or corruped
+	 * Cannot recognize a file if the signature isn't present or corrupted
 	 */
 	private static final byte[] MOBF_FILE_SIGNATURE = {0x53, 0x54, 0x50, 0x43};
-
+	
+	public static final MOBFFileHeader DEFAULT_HEADER = new MOBFFileHeader(Charset.UTF8, 1);
+	
 	private byte[] signature = new byte[4];
 	private Charset encodingCharset;
 	private int version; //unsigned byte
@@ -40,7 +40,7 @@ public class MOBFFileHeader {
 	}
 
 	public MOBFFileHeader(Charset encoding, int version) {
-		this.signature = MOBF_FILE_SIGNATURE;
+		System.arraycopy(MOBF_FILE_SIGNATURE, 0, this.signature, 0, 4);
 		this.encodingCharset = encoding;
 		this.version = version;
 	}
