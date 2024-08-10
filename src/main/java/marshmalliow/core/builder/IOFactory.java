@@ -38,6 +38,8 @@ import marshmalliow.core.objects.Directory;
 import marshmalliow.core.security.FileCredentials;
 
 /**
+ * Factory storing all the IO operations for the application. <br/>
+ * This factory allows to create, read and write JSON MOBF files and more.
  * 
  * @author 278deco
  * @version 1.0

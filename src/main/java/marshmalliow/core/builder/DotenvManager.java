@@ -107,7 +107,7 @@ public class DotenvManager {
 	 * @param dir      The directory containing the .env file
 	 * @param fileName The name of the .env file
 	 * @throws IOException 
-	 * @see {@link #addEnvFile(Path, String)}
+	 * @see #addEnvFile(Path, String)
 	 */
 	public void addEnvFile(Directory dir, String fileName) throws IOException {
 		addEnvFile(dir.getPath(), fileName);

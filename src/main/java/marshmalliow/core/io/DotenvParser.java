@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import marshmalliow.core.exceptions.DotenvParseException;
-import marshmalliow.core.exceptions.JSONParseException;
 import marshmalliow.core.file.dotenv.DotenvContainer;
 import marshmalliow.core.file.dotenv.DotenvToken;
 import marshmalliow.core.file.dotenv.DotenvTokenEnum;
@@ -31,7 +30,7 @@ public class DotenvParser {
 	/**
 	 * Parse the {@link DotenvToken} provided by the {@link DotenvLexer}.<br/>
 	 * Update the state machine depending on the token encountered.<br/>
-	 * @throws JSONParseException
+	 * @throws DotenvParseException
 	 * @return The {@link DotenvContainer} containing the mapping of the .env file
 	 */
 	public synchronized DotenvContainer parse() throws DotenvParseException {

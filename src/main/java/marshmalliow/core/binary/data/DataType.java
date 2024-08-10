@@ -21,7 +21,25 @@ public abstract class DataType<T> implements RegisteredDataType {
 	/**
 	 * Enum that represents the category of the data type
 	 */
-	public static enum Category { PRIMITIVE, CONTAINER, ADVANCED }
+	public static enum Category { 
+		/**
+		 * Primitive data type <br/>
+		 * <i>Example : Integer, Boolean, Short</i>
+		 */
+		PRIMITIVE, 
+		
+		/**
+		 * Container data type <br/>
+		 * <i>Example : List, Array, Object</i>
+		 */
+		CONTAINER, 
+		
+		/**
+		 * Advanced data type <br/>
+		 * <i>Example : Datetime, String</i>
+		 */
+		ADVANCED;
+	}
 	
 	protected Optional<String> name;
 	protected T value;

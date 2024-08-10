@@ -19,18 +19,81 @@ import marshmalliow.core.exceptions.DatatypeRegistryException;
 
 public enum DataTypeEnum {
 
+	/**
+	 * NULL value.
+	 */
 	NULL(0),
+	
+	/**
+	 * Object data
+	 * @see ObjectDataType
+	 */
 	OBJECT(1),
+	
+	/**
+	 * Byte data
+	 * @see ByteDataType
+	 */
 	BYTE(2),
+	
+	/**
+	 * Boolean data
+	 * @see BooleanDataType
+	 */
 	BOOLEAN(3),
+	
+	/**
+	 * Short data
+	 * @see ShortDataType
+	 */
 	SHORT(4),
+	
+	/**
+	 * Integer data
+	 * @see IntegerDataType
+     */
 	INT(5),
+	
+	/**
+	 * Long data
+	 * @see LongDataType
+	 */
 	LONG(6),
+	
+	/**
+	 * Float data
+	 * @see FloatDataType
+	 */
 	FLOAT(7),
+	
+	/**
+	 * Double data
+	 * @see Double
+	 */
 	DOUBLE(8),
+	
+	/**
+	 * String data
+	 * @see StringDataType
+	 */
 	STRING(9),
+	
+	/**
+	 * Datetime data
+	 * @see DatetimeDataType
+	 */
 	DATETIME(10),
+	
+	/**
+	 * List data
+	 * @see ListDataType
+	 */
 	LIST(11),
+	
+	/**
+	 * Array data
+	 * @see ArrayDataType
+	 */
 	ARRAY(12);
 
 	private byte id;

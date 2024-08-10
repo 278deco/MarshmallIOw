@@ -59,7 +59,7 @@ public class BinaryWriter {
 
 	/**
 	 * Writes {@code length} bytes from the specified byte array starting at offset
-	 * {@code offset} to this output stream.<b/>
+	 * {@code offset} to this output stream. <br/>
 	 * The {@code write} method of {@code DataOutputStream} calls the {@code write}
 	 * method of one argument on each byte to output.
 	 *
@@ -377,7 +377,7 @@ public class BinaryWriter {
 	 * 
 	 * @param dt A {@code DateTime} value to be written.
 	 * @throws IOException if an I/O error occurs
-	 * @see DateTime()
+	 * @see DateTime
 	 */
 	public void writeDatetime(DateTime dt) throws IOException {
 		final byte[] byteBuffer;

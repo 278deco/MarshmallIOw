@@ -107,7 +107,7 @@ public class DataTypeHelper {
      * 
      * @param name   The name of the array.
      * @param values The array of {@code float}.
-     * @return The {@link ArrayDataType} of {@link FloatDataType
+     * @return The {@link ArrayDataType} of {@link FloatDataType}.
      */
 	public static ArrayDataType<FloatDataType> asArray(String name, float...values) {
 		final FloatDataType[] result = new FloatDataType[values.length];
@@ -164,7 +164,7 @@ public class DataTypeHelper {
      * 
      * @param name   The name of the array.
      * @param values The array of {@code long}.
-     * @return The {@link ArrayDataType} of {@link LongDataType
+     * @return The {@link ArrayDataType} of {@link LongDataType}.
      */
 	public static ArrayDataType<LongDataType> asArray(String name, long...values) {
 		final LongDataType[] result = new LongDataType[values.length];

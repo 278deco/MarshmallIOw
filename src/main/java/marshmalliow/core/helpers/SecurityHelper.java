@@ -94,8 +94,9 @@ public class SecurityHelper {
 	 * and writes the encrypted data to the output stream.
 	 * 
 	 * @param cipher The cipher to use for encryption.
-	 * @param in     The input stream to read the data from.
 	 * @param out    The output stream to write the encrypted data to.
+	 * @param credentials The credentials to use for encryption.
+	 * @param tagSize The size of the authentication
 	 * @return A {@link CipherOutputStream} containing the encrypted data.
 	 * @throws IOException If an I/O error occurs.
 	 */
@@ -115,7 +116,8 @@ public class SecurityHelper {
 	 * 
 	 * @param cipher The cipher to use for decryption.
 	 * @param in     The input stream to read the encrypted data from.
-	 * @param out    The output stream to write the decrypted data to.
+	 * @param credentials The credentials to use for decryption.
+	 * @param tagSize The size of the authentication
 	 * @return A {@link CipherInputStream} containing the decrypted data.
 	 * @throws IOException If an I/O error occurs.
 	 */
