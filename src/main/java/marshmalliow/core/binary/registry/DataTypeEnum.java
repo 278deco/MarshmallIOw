@@ -3,34 +3,97 @@ package marshmalliow.core.binary.registry;
 
 import org.apache.logging.log4j.Logger;
 
-import marshmalliow.core.binary.data.types.advanced.DatetimeDataType;
-import marshmalliow.core.binary.data.types.advanced.StringDataType;
-import marshmalliow.core.binary.data.types.container.ArrayDataType;
-import marshmalliow.core.binary.data.types.container.ListDataType;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
-import marshmalliow.core.binary.data.types.primitive.BooleanDataType;
-import marshmalliow.core.binary.data.types.primitive.ByteDataType;
-import marshmalliow.core.binary.data.types.primitive.DoubleDataType;
-import marshmalliow.core.binary.data.types.primitive.FloatDataType;
-import marshmalliow.core.binary.data.types.primitive.IntegerDataType;
-import marshmalliow.core.binary.data.types.primitive.LongDataType;
-import marshmalliow.core.binary.data.types.primitive.ShortDataType;
-import marshmalliow.core.binary.exceptions.DatatypeRegistryException;
+import marshmalliow.core.binary.data.advanced.DatetimeDataType;
+import marshmalliow.core.binary.data.advanced.StringDataType;
+import marshmalliow.core.binary.data.container.ArrayDataType;
+import marshmalliow.core.binary.data.container.ListDataType;
+import marshmalliow.core.binary.data.container.ObjectDataType;
+import marshmalliow.core.binary.data.primitive.BooleanDataType;
+import marshmalliow.core.binary.data.primitive.ByteDataType;
+import marshmalliow.core.binary.data.primitive.DoubleDataType;
+import marshmalliow.core.binary.data.primitive.FloatDataType;
+import marshmalliow.core.binary.data.primitive.IntegerDataType;
+import marshmalliow.core.binary.data.primitive.LongDataType;
+import marshmalliow.core.binary.data.primitive.ShortDataType;
+import marshmalliow.core.exceptions.DatatypeRegistryException;
 
 public enum DataTypeEnum {
 
+	/**
+	 * NULL value.
+	 */
 	NULL(0),
+	
+	/**
+	 * Object data
+	 * @see ObjectDataType
+	 */
 	OBJECT(1),
+	
+	/**
+	 * Byte data
+	 * @see ByteDataType
+	 */
 	BYTE(2),
+	
+	/**
+	 * Boolean data
+	 * @see BooleanDataType
+	 */
 	BOOLEAN(3),
+	
+	/**
+	 * Short data
+	 * @see ShortDataType
+	 */
 	SHORT(4),
+	
+	/**
+	 * Integer data
+	 * @see IntegerDataType
+     */
 	INT(5),
+	
+	/**
+	 * Long data
+	 * @see LongDataType
+	 */
 	LONG(6),
+	
+	/**
+	 * Float data
+	 * @see FloatDataType
+	 */
 	FLOAT(7),
+	
+	/**
+	 * Double data
+	 * @see Double
+	 */
 	DOUBLE(8),
+	
+	/**
+	 * String data
+	 * @see StringDataType
+	 */
 	STRING(9),
+	
+	/**
+	 * Datetime data
+	 * @see DatetimeDataType
+	 */
 	DATETIME(10),
+	
+	/**
+	 * List data
+	 * @see ListDataType
+	 */
 	LIST(11),
+	
+	/**
+	 * Array data
+	 * @see ArrayDataType
+	 */
 	ARRAY(12);
 
 	private byte id;

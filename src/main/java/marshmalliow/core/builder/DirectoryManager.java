@@ -79,8 +79,6 @@ public class DirectoryManager {
 	 * Register every directory to the directories's list and create them if they don't exist.
 	 * 
 	 * @param directories The directories to be registered
-	 * @return true if the directories have been successfully registered, false
-	 *         otherwise
 	 */
 	public void registerNewDirectory(Directory... directories) {
 		try {

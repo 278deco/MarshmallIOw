@@ -20,17 +20,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import marshmalliow.core.binary.MOBFFile;
+import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.data.MOBFFileHeader;
-import marshmalliow.core.binary.data.types.DataType;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
+import marshmalliow.core.binary.data.container.ObjectDataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;
+import marshmalliow.core.exceptions.UnsupportedJSONContainerException;
 import marshmalliow.core.file.TextFile;
+import marshmalliow.core.io.JSONLexer;
+import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.json.JSONFile;
-import marshmalliow.core.json.exceptions.UnsupportedJSONContainerException;
-import marshmalliow.core.json.io.JSONLexer;
-import marshmalliow.core.json.io.JSONParser;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;
@@ -38,6 +38,8 @@ import marshmalliow.core.objects.Directory;
 import marshmalliow.core.security.FileCredentials;
 
 /**
+ * Factory storing all the IO operations for the application. <br/>
+ * This factory allows to create, read and write JSON MOBF files and more.
  * 
  * @author 278deco
  * @version 1.0

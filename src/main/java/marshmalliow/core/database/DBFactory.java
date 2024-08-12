@@ -28,9 +28,9 @@ public class DBFactory {
 
 	private DBFactory(DBCredentials credentials) {
 		this.credentialsHolder = new DBCredentialsHolder(credentials);
-		if(credentials.isWithPool()) {
-			this.credentialsHolder.initializeConnectionPool();
-		}
+//		if(credentials.isWithPool()) {
+//			this.credentialsHolder.initializeConnectionPool();
+//		}
 	}
 
 	/**
@@ -101,7 +101,11 @@ public class DBFactory {
 		return this.getTable(cls, type, true);
 	}
 	
+	/**
+	 * Close all the connections to the database.
+	 * @throws RuntimeException
+	 */
 	public void closeAllConnections() throws RuntimeException {
-		this.credentialsHolder.closeAllConnections().block();
+		this.credentialsHolder.closeAllConnections().subscribe();
 	}
 }

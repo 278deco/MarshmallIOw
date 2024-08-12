@@ -16,9 +16,9 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 
 import marshmalliow.core.helpers.SecurityHelper;
-import marshmalliow.core.json.io.JSONLexer;
-import marshmalliow.core.json.io.JSONParser;
-import marshmalliow.core.json.io.JSONWriter;
+import marshmalliow.core.io.JSONLexer;
+import marshmalliow.core.io.JSONParser;
+import marshmalliow.core.io.JSONWriter;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;

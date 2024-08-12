@@ -22,8 +22,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import marshmalliow.core.database.DBFactory;
 import marshmalliow.core.database.security.DBCredentials;
 import marshmalliow.core.database.utils.DatabaseType;
-import marshmalliow.core.json.io.JSONLexer;
-import marshmalliow.core.json.io.JSONParser;
+import marshmalliow.core.io.JSONLexer;
+import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.json.objects.JSONObject;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

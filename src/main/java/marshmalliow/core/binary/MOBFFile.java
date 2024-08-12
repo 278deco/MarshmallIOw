@@ -11,12 +11,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import marshmalliow.core.binary.data.MOBFFileHeader;
-import marshmalliow.core.binary.data.types.container.ObjectDataType;
-import marshmalliow.core.binary.io.BinaryReader;
-import marshmalliow.core.binary.io.BinaryWriter;
+import marshmalliow.core.binary.data.container.ObjectDataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;
 import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;
+import marshmalliow.core.io.BinaryReader;
+import marshmalliow.core.io.BinaryWriter;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.FileType;
 import marshmalliow.core.objects.IOClass;

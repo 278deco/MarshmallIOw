@@ -3,9 +3,9 @@ package marshmalliow.core.binary.registry;
 import java.util.HashMap;
 import java.util.Map;
 
-import marshmalliow.core.binary.data.types.DataType;
-import marshmalliow.core.binary.data.types.RegisteredDataType;
-import marshmalliow.core.binary.exceptions.DatatypeRegistryException;
+import marshmalliow.core.binary.data.DataType;
+import marshmalliow.core.binary.data.RegisteredDataType;
+import marshmalliow.core.exceptions.DatatypeRegistryException;
 
 public class DataTypeRegistry {
 

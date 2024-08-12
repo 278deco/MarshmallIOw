@@ -32,8 +32,8 @@ public class DBCredentialsHolder {
 	 * @see MariadbConnection
 	 */
 	public Mono<Connection> getMariaDBConnection() {
-		initializeConnectionPool();
 		initializeMonoConnection();
+		initializeConnectionPool();
 		
 		if(this.credentials.isWithPool() && mariaDBPool != null) {
 			return this.mariaDBPool.create().cast(Connection.class);
