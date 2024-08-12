@@ -164,17 +164,18 @@ public class JSONLexer {
 		while(!strEnd) {
 			strbuff[strPos++] = this.buffer[this.bufferIndex];
 			
-			if(incBuffer(1)) {
+			if (strbuff[strPos-1] == '\"') {
+				strEnd = strPos-2 >= 0 && strbuff[strPos - 2] != '\\';
+			}
+			
+			if(!strEnd && incBuffer(1)) {
 				char[] nstrbuff = new char[strbuff.length+this.buffer.length];
 				System.arraycopy(strbuff, 0, nstrbuff, 0, strbuff.length);
 				strbuff = nstrbuff;
 			}
-			
-			strEnd = this.buffer[this.bufferIndex] == '\"' && this.buffer.length-1 == 0;
-			if(!strEnd) strEnd = this.buffer[this.bufferIndex] == '\"' && this.buffer[this.bufferIndex-1] != '\\';
 		}
 		
-		return new JSONToken(JSONTokenEnum.VALUE_STRING, new String(strbuff, 0, strPos));
+		return new JSONToken(JSONTokenEnum.VALUE_STRING, new String(strbuff, 0, strPos-1));
 	}
 	
 	/**
