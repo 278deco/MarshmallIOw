@@ -106,6 +106,6 @@ public class DBFactory {
 	 * @throws RuntimeException
 	 */
 	public void closeAllConnections() throws RuntimeException {
-		this.credentialsHolder.closeAllConnections().subscribe();
+		this.credentialsHolder.closeAllConnections().block();
 	}
 }

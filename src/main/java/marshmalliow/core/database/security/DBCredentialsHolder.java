@@ -1,5 +1,6 @@
 package marshmalliow.core.database.security;
 
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.mariadb.r2dbc.MariadbConnectionConfiguration;
@@ -8,6 +9,7 @@ import org.mariadb.r2dbc.api.MariadbConnection;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.pool.PoolMetrics;
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Mono;
 
@@ -89,9 +91,18 @@ public class DBCredentialsHolder {
 	 */
 	public Mono<Void> closeAllConnections() {
 		if(this.credentials.isWithPool() && this.mariaDBPool != null) {
-			return this.mariaDBPool.close();
+			return this.mariaDBPool.disposeLater();	
 		}
 		
 		return Mono.empty();
 	}
+	
+	public Optional<PoolMetrics> getPoolMetrics() {
+		if (this.credentials.isWithPool() && this.mariaDBPool != null) {
+			return this.mariaDBPool.getMetrics();
+		}
+
+		return Optional.empty();
+	}
+	
 }
