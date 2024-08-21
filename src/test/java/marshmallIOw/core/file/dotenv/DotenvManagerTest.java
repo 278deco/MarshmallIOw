@@ -23,7 +23,7 @@ public class DotenvManagerTest {
 	
 	@Test
 	@Order(1)
-	public void addSystemEnvironment() {
+	public void addSystemEnvironmentTest() {
 		DotenvManager manager = DotenvManager.get();
 		
 		assertNotNull(manager);
@@ -41,7 +41,7 @@ public class DotenvManagerTest {
 	
 	@Test
 	@Order(2)
-	public void addDotenvFile() {
+	public void addDotenvFileTest() {
 		DotenvManager manager = DotenvManager.get();
 
 		assertNotNull(manager);
@@ -64,7 +64,7 @@ public class DotenvManagerTest {
 	
 	@Test
 	@Order(3)
-	public void checkEnvMapping() {
+	public void checkEnvMappingTest() {
 		DotenvManager manager = DotenvManager.get();
 
 		assertNotNull(manager);
