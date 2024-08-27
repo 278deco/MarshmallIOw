@@ -30,7 +30,7 @@ import marshmalliow.core.json.objects.JSONObject;
 public class DBFactoryTests {
 	
 	@BeforeAll
-	public static void initFactory() {
+	public static void initFactoryTest() {
 		JSONObject content = new JSONObject();
 		BufferedReader reader = null;
 		JSONLexer lexer = null;
@@ -70,13 +70,13 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(1)
-	public void factoryPresent() {
+	public void factoryPresentTest() {
 		assertNotNull(DBFactory.get());
 	}
 	
 	@Test
 	@Order(2)
-	public void setupDatabase() {
+	public void setupDatabaseTest() {
 		assertNotNull(DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB));
 		
 		try {
@@ -89,7 +89,7 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(3)
-	public void testInsertStatement() {
+	public void insertStatementTest() {
 		try {
 			DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).addNewTestValues();
 		} catch (SQLException e) {
@@ -99,7 +99,7 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(4)
-	public void testSelectStatement() {
+	public void selectStatementTest() {
 		try {
 			DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).getNewTestValues();
 		} catch (SQLException e) {
@@ -121,7 +121,7 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(5)
-	public void testCountStatement() {
+	public void countStatementTest() {
 		try {
 			int result = DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).countTestValues();
 			assertTrue(result >= 1);
@@ -132,7 +132,7 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(6)
-	public void testUpdateStatement() {
+	public void updateStatementTest() {
 		try {
 			DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).updateTestValue(1);
 			final List<Object> result = DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).getTestValue(1);
@@ -147,7 +147,7 @@ public class DBFactoryTests {
 	
 	@Test
 	@Order(7)
-	public void testDeleteStatement() {
+	public void deleteStatementTest() {
 		try {
 			int before = DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).countTestValues();
 			DBFactory.get().getTable(DBTableTest.class, DatabaseType.MARIADB).deleteTestValue();
