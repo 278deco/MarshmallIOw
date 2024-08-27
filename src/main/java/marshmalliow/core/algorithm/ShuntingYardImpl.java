@@ -29,27 +29,30 @@ import marshmalliow.core.json.utils.JSONTokenEnum;
  * A simple explaination of the algorithm is as follows:
  * <ol>
  * <li>Read the tokens in infix notation</li>
- * <li>While there are tokens to be read:</li>
+ * <li>While there are tokens to be read:
  * <ol>
- * <li>Read a token</li>
- * <li>If the token is a number, then add it to the output queue</li>
- * <li>If the token is an operator, then:</li>
- * <ol>
- * <li>While the stack is not empty and the top of the stack is an operator with
- * greater precedence than the token, pop the operator from the stack and add it
- * to the output queue</li>
- * <li>Push the token onto the stack</li>
- * </ol>
- * <li>If the token is a left parenthesis, then push it onto the stack</li>
- * <li>If the token is a right parenthesis, then:</li>
- * <ol>
- * <li>While the top of the stack is not a left parenthesis, pop the operator
- * from the stack and add it to the output queue</li>
- * <li>Pop the left parenthesis from the stack</li>
- * <li>If the token at the top of the stack is a function, pop it and add it to
- * the output queue</li>
- * </ol>
- * </ol>
+ *	 <li>Read a token</li>
+ *	 <li>If the token is a number, then add it to the output queue</li>
+ * 	 <li>If the token is an operator, then:
+ * 	 <ol>
+ *		<li>While the stack is not empty and the top of the stack is an operator with
+ * 		greater precedence than the token, pop the operator from the stack and add it
+ * 		to the output queue</li>
+ *		<li>Push the token onto the stack</li>
+ *	 </ol>
+ *	 </li>
+ *	 <li>If the token is a left parenthesis, then push it onto the stack</li>
+ *	 <li>If the token is a right parenthesis, then:
+ *	 <ol>
+ *		<li>While the top of the stack is not a left parenthesis, pop the operator
+ *		from the stack and add it to the output queue</li>
+ *		<li>Pop the left parenthesis from the stack</li>
+ *		<li>If the token at the top of the stack is a function, pop it and add it to
+ *		the output queue</li>
+ *	 </ol>
+ * 	 </li>
+ * 	</ol>
+ * 	</li>
  * </ol>
  * <p>
  * This implementation supports the following operators and functions:
