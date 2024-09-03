@@ -51,7 +51,6 @@ public class JSONParser {
 	 */
 	public synchronized JSONContainer parse() throws JSONParseException {
 		final JSONToken firstToken = lexer.nextToken(); //determine if the json is an object or an array
-		
 		switch (firstToken.getType() ) {
 		case LEFT_BRACE:
 			state = BEGIN_OBJ;
@@ -110,7 +109,7 @@ public class JSONParser {
 					break;
 				case COMMA_SEPARATOR:
 					if(state == VALUE || state == END_OBJ || state == END_ARR) state = VALUE_SEPARATOR;
-					else throw new JSONParseException();
+					else throw new JSONParseException("Unexpected token: "+token.getType().name()+" at depth "+depth+" and state "+state);
 					
 					break;
 				case VALUE_STRING:

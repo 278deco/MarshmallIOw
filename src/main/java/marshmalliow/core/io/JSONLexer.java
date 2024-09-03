@@ -8,6 +8,7 @@ import java.util.Objects;
 import marshmalliow.core.exceptions.JSONParseException;
 import marshmalliow.core.json.objects.JSONToken;
 import marshmalliow.core.json.utils.JSONTokenEnum;
+import marshmalliow.core.objects.Null;
 
 /**
  * JSONLexer purpose is to read a JSON file and produce {@link JSONToken}, checking for syntaxes errors.<br/>
@@ -137,7 +138,7 @@ public class JSONLexer {
 				incBuffer(1);
 			}
 		}
-		
+
 		return result;
 	}
 	
@@ -191,15 +192,15 @@ public class JSONLexer {
 		
 		for(int i = 0; i < temp.length; i++) {
 			temp[i] = this.buffer[bufferIndex];
-			incBuffer(1);
+			if(i < temp.length-1) incBuffer(1);
 		}
-		
+				
 		if(startingChar == 't' && Arrays.equals(TRUE_PATTERN, 0, TRUE_PATTERN.length, temp, 0, TRUE_PATTERN.length)) {
-			return new JSONToken(JSONTokenEnum.VALUE_TRUE);
+			return new JSONToken(JSONTokenEnum.VALUE_TRUE, true);
 		}else if(startingChar == 'f' && Arrays.equals(FALSE_PATTERN, 0, FALSE_PATTERN.length, temp, 0, FALSE_PATTERN.length)) {
-			return new JSONToken(JSONTokenEnum.VALUE_FALSE);
+			return new JSONToken(JSONTokenEnum.VALUE_FALSE, false);
 		}else if(startingChar == 'n' && Arrays.equals(NULL_PATTERN, 0, NULL_PATTERN.length, temp, 0, NULL_PATTERN.length)) {
-			return new JSONToken(JSONTokenEnum.VALUE_NULL);
+			return new JSONToken(JSONTokenEnum.VALUE_NULL, Null.NULL);
 		}else {
 			throw new JSONParseException();
 		}
