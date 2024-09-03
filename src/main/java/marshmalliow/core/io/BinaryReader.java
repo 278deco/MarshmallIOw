@@ -20,8 +20,14 @@ import marshmalliow.core.objects.DateTime;
  */
 public class BinaryReader {
 
+	/**
+	 * The minimum size of the buffer used in a {@link BinaryReader}
+	 */
 	private static final int BUFFER_MIN_SIZE = 64;
 
+	/**
+	 * The input stream used to read the data
+	 */
 	protected volatile InputStream in;
 	
 	/**
@@ -35,7 +41,10 @@ public class BinaryReader {
 
 	private byte readBuffer[] = new byte[8];
 
-
+	/**
+	 * Creates a new BinaryReader that reads from the given input stream.
+	 * @param in the input stream to read from
+	 */
 	public BinaryReader(InputStream in) {
 		this.in = in;
 	}
@@ -67,7 +76,7 @@ public class BinaryReader {
 	 * @param b the buffer into which the data is read.
 	 * @return the total number of bytes read into the buffer, or -1 if there is no more data because the end of the stream has been reached.
 	 * @see InputStream#read(byte[], int, int)
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public int read(byte[] b) throws IOException {
 		return in.read(b, 0, b.length);
@@ -80,7 +89,7 @@ public class BinaryReader {
      * @param length the maximum number of bytes to read.
      * @return the total number of bytes read into the buffer, or -1 if there is no more data because the end of the stream has been reached.
      * @see InputStream#read(byte[], int, int)
-     * @throws IOException
+     * @throws IOException If an I/O error occurs
      */
 	public int read(byte[] b, int offset, int length) throws IOException {
 		return in.read(b, offset, length);
@@ -90,7 +99,7 @@ public class BinaryReader {
 	/**
 	 * Read up to <em>len</em> bytes from the stream. This method read until the array is full or the end of the stream is reached.
 	 * @param b the buffer into which the data is read.
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public void readFully(byte[] b) throws IOException {
 		this.readFully(b, 0, b.length);
@@ -101,7 +110,7 @@ public class BinaryReader {
 	 * @param b the buffer into which the data is read.
 	 * @param off the start offset in the buffer at which the data is written
 	 * @param len the maximum number of bytes to read
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public void readFully(byte[] b, int off, int len) throws IOException {
 		Objects.checkFromIndexSize(off, len, b.length);
@@ -119,7 +128,7 @@ public class BinaryReader {
 	 * Skips over and discards <em>n</em> bytes of data from the input stream.
 	 * @param n the number of bytes to be skipped.
 	 * @return the actual number of bytes skipped.
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public int skipBytes(int n) throws IOException {
 		int skipped = 0;
@@ -138,7 +147,7 @@ public class BinaryReader {
 	 * 
 	 * @return the byte value converted to a boolean
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException 
+	 * @throws IOException If an I/O error occurs
 	 */
 	public boolean readBoolean() throws IOException {
 		int bl = in.read();
@@ -152,7 +161,7 @@ public class BinaryReader {
 	 * 
 	 * @return the byte value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public byte readByte() throws IOException {
 		int b = in.read();
@@ -166,7 +175,7 @@ public class BinaryReader {
 	 * 
 	 * @return the unsigned byte value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public int readUnsignedByte() throws IOException {
 		int ubyte = in.read();
@@ -180,7 +189,7 @@ public class BinaryReader {
 	 * 
 	 * @return the short value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public short readShort() throws IOException {
 		int short1 = in.read();
@@ -196,7 +205,7 @@ public class BinaryReader {
 	 * 
 	 * @return the unsigned short value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public int readUnsignedShort() throws IOException {
 		int short1 = in.read();
@@ -212,7 +221,7 @@ public class BinaryReader {
 	 * 
 	 * @return the char value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public char readChar() throws IOException {
 		return (char)readUnsignedShort();
@@ -224,7 +233,7 @@ public class BinaryReader {
 	 * 
 	 * @return the integer value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public int readInt() throws IOException {
 		readFully(readBuffer, 0, 4);
@@ -238,7 +247,7 @@ public class BinaryReader {
 	 * 
 	 * @return the long value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public long readLong() throws IOException {
 		readFully(readBuffer, 0, 8);
@@ -255,7 +264,7 @@ public class BinaryReader {
 	 * 
 	 * @return the float value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public float readFloat() throws IOException {
 		return Float.intBitsToFloat(readInt());
@@ -281,7 +290,7 @@ public class BinaryReader {
 	 * 
 	 * @return the string value
 	 * @throws EOFException if the end of the stream is reached
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public String readUTF(Charset charset) throws IOException {
 		switch(charset) {
@@ -371,7 +380,7 @@ public class BinaryReader {
      * 
      * @return the DateTime value
      * @throws EOFException if the end of the stream is reached
-     * @throws IOException
+     * @throws IOException If an I/O error occurs
      * @throws DatetimeDataFormatException if the control byte is 0x00
      */
 	public DateTime readDatetime() throws IOException {

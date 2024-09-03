@@ -2,19 +2,13 @@ package marshmalliow.core.binary.data.container;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.AbstractSet;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.MissingFormatArgumentException;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 
 import marshmalliow.core.binary.data.DataType;
 import marshmalliow.core.binary.registry.DataTypeEnum;

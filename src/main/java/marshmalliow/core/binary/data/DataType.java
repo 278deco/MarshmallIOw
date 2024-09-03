@@ -100,8 +100,28 @@ public abstract class DataType<T> implements RegisteredDataType {
 		readValue(reader, registry, charset);
 	}
 	
+	/**
+	 * Write the value of the data type to the writer using the registry and the charset
+	 * <p>
+	 * This method should be implemented by the child class to write the value of the data type to the writer
+	 * 
+	 * @param writer The writer to write the data type to
+	 * @param registry The registry that contains every {@link DataType} registered in the application
+	 * @param charset The charset to use to write the data
+	 * @throws IOException If an I/O error occurs
+	 */
 	protected abstract void writeValue(BinaryWriter writer, DataTypeRegistry registry, Charset charset) throws IOException;
 
+	/**
+	 * Read the value of the data type from the reader using the registry and the charset
+	 * <p>
+	 * This method should be implemented by the child class to read the value of the data type from the reader
+	 * 
+	 * @param reader   The reader to read the data type from
+	 * @param registry The registry that contains every {@link DataType} registered in the application
+	 * @param charset  The charset to use to read the data
+	 * @throws IOException If an I/O error occurs
+	 */
 	protected abstract void readValue(BinaryReader reader, DataTypeRegistry registry, Charset charset) throws IOException;
 
 	/**
@@ -165,13 +185,34 @@ public abstract class DataType<T> implements RegisteredDataType {
 		return this.isModified.get();
 	}
 
+	/**
+	 * Get a string representation of the data type
+	 * <p>
+	 * The string representation is as follows :<br/>
+	 * <ul>
+	 * <li><i>ClassName[name:Name, value:Value]</i> if the name is present</li>
+	 * <li><i>ClassName[value:Value]</i> if the name is not present</li>
+	 * </ul>
+	 * 
+	 * @return The string representation of the data type
+	 */
 	@Override
 	public String toString() {
 		return getName().isPresent() ?
 				getClass().getSimpleName()+"[name:"+getName().get()+", value:"+getValue()+"]" :
 				getClass().getSimpleName()+"[value:"+getValue()+"]"	;
 	}
-
+	
+	/**
+	 * Compare two data types.
+	 * <p>
+	 * Two data types are equals if:
+	 * <ul>
+	 * <li>They are the same instance meaning the same {@link DataType} </li>
+	 * <li>They have the same name</li>
+	 * <li>They have the same value</li>
+	 * </ul>
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) return true;

@@ -101,10 +101,20 @@ public enum DataTypeEnum {
 		this.id = (byte)id;
 	}
 
+	/**
+	 * Get the id of the data type.
+	 * @return the id of the data type.
+	 */
 	public byte getId() {
 		return id;
 	}
 
+	/**
+	 * Create a new registry with all default data types.
+	 * 
+	 * @return a new registry with all default data
+	 * @throws DatatypeRegistryException if an error occurs while registering
+	 */
 	public static DataTypeRegistry.Builder createNewRegistry() throws DatatypeRegistryException {
 		final DataTypeRegistry.Builder builder = DataTypeRegistry.builder();
 
@@ -124,6 +134,14 @@ public enum DataTypeEnum {
 		return builder;
 	}
 	
+	/**
+	 * Create a new registry with all default data types.
+	 * <p>
+	 * This method is safe and will log any error that occurs while registering 
+	 * rather than throwing an exception.
+	 * @param logger The logger to log any errors that occur
+	 * @return a new registry with all default data
+	 */
 	public static DataTypeRegistry.Builder createSafeNewRegistry(Logger logger) {
 		final DataTypeRegistry.Builder builder = DataTypeRegistry.builder();
 
