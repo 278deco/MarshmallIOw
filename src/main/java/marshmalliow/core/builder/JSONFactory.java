@@ -15,8 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.management.InstanceNotFoundException;
-
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.json.JSONFile;
@@ -489,7 +487,7 @@ public class JSONFactory {
 	 */
 	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, String directoryID,
 			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
-		return createJSONFromBase(baseClass, getDirectory(directoryID), jsonName, rootContainer);
+		return createJSONFileFromBase(baseClass, getDirectory(directoryID), jsonName, rootContainer);
 	}
 	
 	/**
@@ -510,13 +508,13 @@ public class JSONFactory {
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
 	 * @throws IOException If an IO error occurs
 	 */
-	public <E extends JSONFile> E createJSONFromBase(Class<E> baseClass, Path path,
+	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, Path path,
 			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
 		
-		return createJSONFromBase(baseClass, directory, jsonName, rootContainer);
+		return createJSONFileFromBase(baseClass, directory, jsonName, rootContainer);
 	}
 	
 	/**
@@ -535,7 +533,7 @@ public class JSONFactory {
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
 	 * @throws IOException If an IO error occurs
 	 */
-	public <E extends JSONFile> E createJSONFromBase(Class<E> baseClass, Directory directory,
+	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, Directory directory,
 			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		if (baseClass == null || !(baseClass.isInstance(JSONFile.class))) {
