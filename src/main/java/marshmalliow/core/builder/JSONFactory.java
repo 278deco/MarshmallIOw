@@ -1,10 +1,13 @@
 package marshmalliow.core.builder;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
@@ -17,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
+import marshmalliow.core.io.JSONWriter;
 import marshmalliow.core.json.JSONFile;
 import marshmalliow.core.json.objects.JSONContainer;
 import marshmalliow.core.json.objects.JSONObject;
@@ -87,7 +91,7 @@ public class JSONFactory {
 	}
 
 	/*
-	 * Parse to JSON Container methods 
+	 * Parse and Write JSON Container methods 
 	 */
 	
 	/**
@@ -194,6 +198,44 @@ public class JSONFactory {
 		}finally {
 			if(lexer != null) lexer.close();
 			if(reader != null) reader.close(); //Just in case
+		}
+	}
+	
+	/**
+	 * Write the content of a {@link JSONContainer} to a String using {@link JSONWriter}.
+	 * 
+	 * @param container The JSON container to write
+	 * @return The JSON string
+	 * @throws IOException If an IO error occurs
+	 */
+	public String writeJSONToString(JSONContainer container) throws IOException {
+		final StringWriter writer = new StringWriter();
+		
+		new JSONWriter(container).write(writer);
+		
+		return writer.toString();
+	}
+	
+	/**
+	 * Write the content of a {@link JSONContainer} to a byte array using {@link JSONWriter}.
+	 * 
+	 * @param container The JSON container to write
+	 * @return The JSON byte array
+	 * @throws IOException If an IO error occurs
+	 */
+	public byte[] writeJSONToByte(JSONContainer container) throws IOException {
+		ByteArrayOutputStream output = null;
+		OutputStreamWriter writer = null;
+		try {
+			output = new ByteArrayOutputStream();
+			writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
+			
+			new JSONWriter(container).write(writer);
+			
+			return output.toByteArray();
+		}finally {
+			if(output != null) output.close();
+			if(writer != null) writer.close();
 		}
 	}
 	
