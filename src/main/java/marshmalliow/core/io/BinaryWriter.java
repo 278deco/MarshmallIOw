@@ -16,10 +16,19 @@ import marshmalliow.core.objects.DateTime;
  */
 public class BinaryWriter {
 
+	/**
+	 * The minimum size of the buffer used by the {@link BinaryWriter} class.
+	 */
 	private static final int BUFFER_MIN_SIZE = 128;
 	
+	/**
+	 * The output stream to write to.
+	 */
 	protected volatile OutputStream out;
 
+	/**
+	 * The number of bytes written to the stream since the creation of the {@link BinaryWriter} object.
+	 */
 	protected long written;
 
 	/**
@@ -93,7 +102,7 @@ public class BinaryWriter {
 	 * Closes the stream and releases any system resources associated with it.<br/>
 	 * Once the stream has been closed, further write() invocations will throw an IOException.<br/>
 	 * Multiple calls to close are allowed and will have no effect.
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 */
 	public void close() throws IOException {
 		if(closed) return;
@@ -446,6 +455,10 @@ public class BinaryWriter {
 		return (byte)Math.abs((offset.getTotalSeconds() /60 ) /15);
 	}
 
+	/**
+	 * Gets the number of bytes written to the stream since the creation of the {@link BinaryWriter} object.
+	 * @return The number of bytes written to the stream
+	 */
 	public long size() {
 		return this.written;
 	}

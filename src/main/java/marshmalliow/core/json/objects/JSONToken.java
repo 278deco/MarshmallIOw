@@ -1,6 +1,7 @@
 package marshmalliow.core.json.objects;
 
 import marshmalliow.core.json.utils.JSONTokenEnum;
+import marshmalliow.core.objects.Null;
 
 public class JSONToken {
 
@@ -45,7 +46,7 @@ public class JSONToken {
 		case VALUE_FALSE:
 			return (boolean) data;
 		default:
-			return null;
+			return Null.NULL;
 		}
 	}
 	

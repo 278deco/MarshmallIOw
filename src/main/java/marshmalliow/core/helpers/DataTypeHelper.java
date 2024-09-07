@@ -18,8 +18,18 @@ import marshmalliow.core.binary.data.primitive.LongDataType;
 import marshmalliow.core.binary.data.primitive.ShortDataType;
 import marshmalliow.core.objects.DateTime;
 
+/**
+ * Helper class for creating and converting data types.
+ * <p>
+ * This class provides static methods for creating and converting data types.
+ * @author 278deco
+ * @version 1.1.0
+ * @since 0.1.0
+ */
 public class DataTypeHelper {
 
+	private DataTypeHelper() { }
+	
 	/**
 	 * Create an array of {@link BooleanDataType} for a given {@code boolean[]}.
 	 * @param name The name of the array.

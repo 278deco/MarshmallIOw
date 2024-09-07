@@ -9,7 +9,9 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.util.Optional;
 
+import marshmalliow.core.binary.MOBFFile;
 import marshmalliow.core.binary.utils.ComplementaryType;
+import marshmalliow.core.io.BinaryReader;
 
 /**
  * This class is a representation of a date and time object. It is composed of 9 fields:
@@ -33,30 +35,35 @@ import marshmalliow.core.binary.utils.ComplementaryType;
  */
 public class DateTime {
 
+	/**
+	 * The number of fields in a {@code DateTime} object.
+	 */
 	public static final int FIELDS_NUMBER = 9;
 
 	/**
-	 * Date part with:
-	 * <ul>
-	 *	<li>The year as {@code short}</li>
-	 *	<li>The month as {@code byte}</li>
-	 *	<li>The dayOfMonth as {@code byte}</li>
-	 * </ul>
+	 * Represents the year part of the date stored inside {@link DateTime}.
 	 */
 	private int year;
+	/**
+	 * Represents the month part of the date stored inside {@link DateTime}.
+	 */
 	private byte month;
+	/**
+	 * Represents the day of the month part of the date stored inside {@link DateTime}.
+	 */
 	private byte dayOfMonth;
 
 	/**
-	 * Time part with:
-	 * <ul>
-	 *	<li>The hour as {@code byte}</li>
-	 *	<li>The minute as {@code byte}</li>
-	 *	<li>The second as {@code byte}</li>
-	 * </ul>
+	 * Represents the hour part of the time stored inside {@link DateTime}.
 	 */
 	private byte hour;
+	/**
+	 * Represents the minute part of the time stored inside {@link DateTime}.
+	 */
 	private byte minute;
+	/**
+	 * Represents the second part of the time stored inside {@link DateTime}.
+	 */
 	private byte second;
 
 	/**
@@ -68,11 +75,41 @@ public class DateTime {
 	 * Complementary represent either milliseconds, microseconds or nanoseconds
 	 */
 	private ComplementaryType complementaryType;
+	
+	/**
+	 * Complementary part with:
+	 * <ul>
+	 *	<li>The complementary type as {@code byte}</li>
+	 *	<li>The complementary data as {@code short}</li>
+	 * </ul>
+	 * Complementary represent either milliseconds, microseconds or nanoseconds
+	 */
 	private short complementary;
 
+	/**
+	 * Timezone part with:
+	 * <ul>
+	 *	<li>The timezone as {@code ZoneId}</li>
+	 *	<li>The timezone offset as {@code ZoneOffset}</li>
+	 * </ul>
+	 * The timezone is calculated using the offset.
+	 */
 	private ZoneId timezone;
+	
+	/**
+	 * Timezone part with:
+	 * <ul>
+	 *	<li>The timezone as {@code ZoneId}</li>
+	 *	<li>The timezone offset as {@code ZoneOffset}</li>
+	 * </ul>
+	 * The timezone is calculated using the offset.
+	 */
 	private ZoneOffset timezoneOffset;
 
+	/**
+	 * Private constructor to create a new instance of {@code DateTime} from a {@code Builder} object.
+	 * @param builder the {@code Builder} object
+	 */
 	private DateTime(Builder builder) {
 		this.year = builder.year;
 		this.month = builder.month;
@@ -86,58 +123,141 @@ public class DateTime {
 		this.timezoneOffset = builder.timezoneOffset;
 	}
 
+	/**
+	 * Get the year part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the year or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Integer> getYear() {
 		return this.year != -1 ? Optional.of(this.year) : Optional.empty();
 	}
 
+	/**
+	 * Check if the year part is present.
+	 * @return {@code true} if the year part is present, {@code false} otherwise
+	 */
 	public boolean isYearPresent() {
 		return this.year != -1;
 	}
 
+	/**
+	 * Get the month part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the month or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Byte> getMonth() {
 		return this.month != -1 ? Optional.of(this.month) : Optional.empty();
 	}
 
+	/**
+	 * Check if the month part is present.
+	 * @return {@code true} if the month part is present, {@code false} otherwise
+	 */
 	public boolean isMonthPresent() {
 		return this.month != -1;
 	}
 
+	/**
+	 * Get the day of the month part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the day of the month or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Byte> getDayOfMonth() {
 		return this.dayOfMonth != -1 ? Optional.of(this.dayOfMonth) : Optional.empty();
 	}
 
+	/**
+	 * Check if the day of the month part is present.
+	 * @return {@code true} if the day of the month part is present, {@code false} otherwise
+	 */
 	public boolean isDayOfMonthPresent() {
 		return this.dayOfMonth != -1;
 	}
 
+	/**
+	 * Get the hour part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the hour or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Byte> getHour() {
 		return this.hour != -1 ? Optional.of(this.hour) : Optional.empty();
 	}
 
+	/**
+	 * Check if the hour part is present.
+	 * @return {@code true} if the hour part is present, {@code false} otherwise
+	 */
 	public boolean isHourPresent() {
 		return this.hour != -1;
 	}
 
+	/**
+	 * Get the minute part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the minute or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Byte> getMinute() {
 		return this.minute != -1 ? Optional.of(this.minute) : Optional.empty();
 	}
 
+	/**
+	 * Check if the minute part is present.
+	 * @return {@code true} if the minute part is present, {@code false} otherwise
+	 */
 	public boolean isMinutePresent() {
 		return this.minute != -1;
 	}
 
+	/**
+	 * Get the second part of the {@link DateTime}.
+	 * <p>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the second or empty if not present
+	 * @see BinaryReader#readDatetime()
+	 */
 	public Optional<Byte> getSecond() {
 		return this.second != -1 ? Optional.of(this.second) : Optional.empty();
 	}
 
+	/**
+	 * Check if the second part is present.
+	 * @return {@code true} if the second part is present, {@code false} otherwise
+	 */
 	public boolean isSecondPresent() {
 		return this.second != -1;
 	}
-
+	
+	/**
+	 * Get the {@link ComplementaryType} stored inside this {@link DateTime}.
+	 * <p>
+	 * The complementary type is used to store either milliseconds, microseconds or nanoseconds.<br/>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the complementary type or empty if not present
+	 * @see #getComplementaryValue()
+	 */
 	public Optional<ComplementaryType> getComplementaryType() {
 		return Optional.ofNullable(this.complementaryType);
 	}
 
+	/**
+	 * Get the complementary value stored inside this {@link DateTime}.
+	 * <p>
+	 * The complementary value is used to store either milliseconds, microseconds or nanoseconds.<br/>
+	 * To interpret this value, you must use the {@link #getComplementaryType()} method.<br/>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the complementary value or empty if not present
+	 * @see #getComplementaryType()
+	 */
 	public Optional<Short> getComplementaryValue() {
 		return this.complementary!= -1 ? Optional.of(this.complementary) : Optional.empty();
 	}
@@ -145,11 +265,25 @@ public class DateTime {
 	public boolean isComplementaryPresent() {
 		return this.complementaryType != null && this.complementary != -1;
 	}
-
+	
+	/**
+	 * Get the timezone stored inside this {@link DateTime}.
+	 * <p>
+	 * This attributed is calculated using the {@link #timezoneOffset}.<br/>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the timezone or empty if not present
+	 */
 	public Optional<ZoneId> getTimezone() {
 		return Optional.ofNullable(this.timezone);
 	}
 
+	/**
+	 * Get the timezone offset stored inside this {@link DateTime}.
+	 * <p>
+	 * The timezone offset is used to store the offset from the UTC timezone.<br/>
+	 * This attribute's presence depends on the control byte when stored inside a {@link MOBFFile}.
+	 * @return an {@link Optional} containing the timezone offset or empty if not present
+	 */
 	public Optional<ZoneOffset> getZoneOffset() {
 		return Optional.ofNullable(this.timezoneOffset);
 	}
@@ -320,6 +454,10 @@ public class DateTime {
 				.build();
 	}
 	
+	/**
+	 * Return a string representation of this {@code DateTime} object.
+	 * @return a string representation of this instance
+	 */
 	@Override
 	public String toString() {
 		return "DateTime[Y:"+this.getYear()
@@ -347,42 +485,79 @@ public class DateTime {
 
 		private Builder() { }
 
+		/**
+		 * Set the year of the {@code DateTime} object.
+		 * @param year the year to set 
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder year(int year) {
 			this.year = year;
 
 			return this;
 		}
 
+		/**
+		 * Set the month of the {@code DateTime} object.
+		 * @param month the month to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder month(byte month) {
 			this.month = month;
 
 			return this;
 		}
 
+		/**
+		 * Set the day of the month of the {@code DateTime} object.
+		 * @param dayOfMonth the day of the month to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder dayOfMonth(byte dayOfMonth) {
 			this.dayOfMonth = dayOfMonth;
 
 			return this;
 		}
 
+		/**
+		 * Set the hour of the {@code DateTime} object.
+		 * @param hour the hour to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder hour(byte hour) {
 			this.hour = hour;
 
 			return this;
 		}
 
+		/**
+		 * Set the minute of the {@code DateTime} object.
+		 * @param minute the minute to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder minute(byte minute) {
 			this.minute = minute;
 
 			return this;
 		}
 
+		/**
+		 * Set the second of the {@code DateTime} object.
+		 * @param second the second to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder second(byte second) {
 			this.second = second;
 
 			return this;
 		}
 
+		/**
+		 * Set the complementary part of the {@code DateTime} object.<br/>
+		 * The complementary part is used to store either milliseconds, microseconds or nanoseconds.
+		 * @param type the complementary type to set
+		 * @param data the complementary value to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder complementary(byte type, short data) {
 			this.complementaryType = ComplementaryType.of(type);
 			this.complementary = data;
@@ -390,6 +565,13 @@ public class DateTime {
 			return this;
 		}
 
+		/**
+		 * Set the complementary part of the {@code DateTime} object.<br/>
+		 * The complementary part is used to store either milliseconds, microseconds or nanoseconds.
+		 * @param type The {@link ComplementaryType} to set
+		 * @param data The complementary value to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder complementary(ComplementaryType type, short data) {
 			this.complementaryType = type;
 			this.complementary = data;
@@ -397,6 +579,12 @@ public class DateTime {
 			return this;
 		}
 
+		/**
+		 * Set the timezone of the {@code DateTime} object.<br/>
+		 * @param timezone the {@link ZoneId} to set
+		 * @param offset the {@link ZoneOffset} to set
+		 * @return the current instance of the {@code Builder}
+		 */
 		public Builder timezone(ZoneId timezone, ZoneOffset offset) {
 			this.timezone = timezone;
 			this.timezoneOffset = offset;
@@ -404,6 +592,10 @@ public class DateTime {
 			return this;
 		}
 
+		/**
+		 * Build the {@code DateTime} object.
+		 * @return a new instance of {@code DateTime}
+		 */
 		public DateTime build() {
 			return new DateTime(this);
 		}

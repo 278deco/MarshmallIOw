@@ -135,6 +135,9 @@ public class IOFactory {
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
 	 * @see DirectoryManager#getLoadedDirectory(String)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#getJSONFileContent(String, String, Class)
+	 * @see JSONFactory#getSecuredJSONFileContent(String, String, Class, FileCredentials)
 	 */
 	public <E extends JSONContainer> E getJSONFileContent(String directoryID, String jsonName, Class<E> classContainer, Optional<FileCredentials> credentials) throws IOException {
 		return getJSONFileContent(getDirectory(directoryID), jsonName, classContainer, credentials);
@@ -150,6 +153,9 @@ public class IOFactory {
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
 	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#getJSONFileContent(Path, String, Class)
+	 * @see JSONFactory#getSecuredJSONFileContent(Path, String, Class, FileCredentials)
 	 */
 	public <E extends JSONContainer> E getJSONFileContent(Path path, String jsonName, Class<E> classContainer, Optional<FileCredentials> credentials) throws IOException {
 		return getJSONFileContent(getDirectory(path), jsonName, classContainer, credentials);
@@ -164,6 +170,9 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#getJSONFileContent(Directory, String, Class)
+	 * @see JSONFactory#getSecuredJSONFileContent(Directory, String, Class, FileCredentials)
 	 */
 	public <E extends JSONContainer> E getJSONFileContent(Directory directory, String jsonName, Class<E> classContainer, Optional<FileCredentials> credentials) throws IOException {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
@@ -188,6 +197,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @see DirectoryManager#getLoadedDirectory(String)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(String, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(String, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewJSONFile(String directoryID, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewJSONFile(getDirectory(directoryID), jsonName, classContainer, credentials);
@@ -203,6 +215,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(Path, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(Path, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewJSONFile(Path path, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewJSONFile(getDirectory(path), jsonName, classContainer, credentials);
@@ -217,6 +232,9 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(Directory, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(Directory, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewJSONFile(Directory directory, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
@@ -240,6 +258,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @see DirectoryManager#getLoadedDirectory(String)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(String, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(String, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewEmptyJSONFile(String directoryID, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewEmptyJSONFile(getDirectory(directoryID), jsonName, credentials);
@@ -255,6 +276,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(Path, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(Path, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewEmptyJSONFile(Path path, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		return createNewEmptyJSONFile(getDirectory(path), jsonName, credentials);
@@ -269,6 +293,9 @@ public class IOFactory {
 	 * @param credentials (Optional) the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFile(Directory, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFile(Directory, String, JSONContainer, FileCredentials)
 	 */
 	public JSONFile createNewEmptyJSONFile(Directory directory, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
@@ -290,6 +317,9 @@ public class IOFactory {
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException 
 	 * @see DirectoryManager#getLoadedDirectory(String)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, String, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, String, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, String directoryID, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
 		return createNewJSONFileChild(baseClass, getDirectory(directoryID), jsonName, classContainer, credentials);
@@ -307,6 +337,9 @@ public class IOFactory {
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException 
 	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, Path, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, Path, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Path path, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
 		return createNewJSONFileChild(baseClass, getDirectory(path), jsonName, classContainer, credentials);
@@ -323,6 +356,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException 
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, Directory, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, Directory, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Directory directory, String jsonName, Class<? extends JSONContainer> classContainer, Optional<FileCredentials> credentials) throws IOException, UnsupportedJSONContainerException {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
@@ -359,6 +395,9 @@ public class IOFactory {
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException 
 	 * @see DirectoryManager#getLoadedDirectory(String)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, String, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, String, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, String directoryID, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
 		return createNewJSONFileChild(baseClass, getDirectory(directoryID), jsonName, credentials);
@@ -376,6 +415,9 @@ public class IOFactory {
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException 
 	 * @see DirectoryManager#getLoadedDirectory(Path)
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, Path, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, Path, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Path path, String jsonName, Optional<FileCredentials> credentials) throws UnsupportedJSONContainerException, IOException {
 		return createNewJSONFileChild(baseClass, getDirectory(path), jsonName, credentials);
@@ -392,6 +434,9 @@ public class IOFactory {
 	 * @return a new instance of JSONFile
 	 * @throws UnsupportedJSONContainerException
 	 * @throws IOException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#createJSONFileFromBase(Class, Directory, String, JSONContainer)
+	 * @see JSONFactory#createSecuredJSONFileFromBase(Class, Directory, String, JSONContainer, FileCredentials)
 	 */
 	public <E extends JSONFile> E createNewJSONFileChild(Class<E> baseClass, Directory directory, String jsonName, Optional<FileCredentials> credentials) throws IOException, UnsupportedJSONContainerException {
 		this.directoryManager.registerNewDirectoryIfAbsent(directory);
@@ -1060,6 +1105,8 @@ public class IOFactory {
 	 * @param stringURL The URL as a string where the date is stored
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#getHttpContentAsJSON(String)
 	 */
 	public JSONContainer getHttpContentAsJSON(String stringURL) throws IOException {
 		return getHttpContentAsJSON(URI.create(stringURL).toURL());
@@ -1070,6 +1117,8 @@ public class IOFactory {
 	 * @param url an {@link URL} where the date is stored
 	 * @return The container with the data of the JSON File
 	 * @throws IOException
+	 * @deprecated since 0.3.2
+	 * @see JSONFactory#getHttpContentAsJSON(URL)
 	 */
 	public JSONContainer getHttpContentAsJSON(URL url) throws IOException {
 		JSONContainer result = new JSONObject();

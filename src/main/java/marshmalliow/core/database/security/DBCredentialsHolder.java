@@ -13,6 +13,15 @@ import io.r2dbc.pool.PoolMetrics;
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Mono;
 
+/**
+ * Class that holds the credentials to connect to a database.
+ * <p>
+ * It provides a method to access to a connection to the database and a method to close all connections.
+ * @author 278deco
+ * @see DBCredentials
+ * @version 1.0.0
+ * @since 0.1.0
+ */
 public class DBCredentialsHolder {
 	private final ReentrantLock LOCK = new ReentrantLock();
 	
@@ -65,6 +74,11 @@ public class DBCredentialsHolder {
 		}
 	}
 	
+	/**
+	 * Initialize the connection to the database.
+	 * <p>
+	 * If the connection has already been established before, this method will use cached object to retrieve the instance much faster.
+	 */
 	private void initializeMonoConnection() {
 		if(mariaDBConnectionFactory == null) {
 			try {
@@ -97,6 +111,11 @@ public class DBCredentialsHolder {
 		return Mono.empty();
 	}
 	
+	/**
+	 * Get the pool metrics if the pool usage is activated.
+	 * 
+	 * @return An {@link Optional} containing the {@link PoolMetrics} if the pool usage is activated, {@link Optional#empty()} otherwise
+	 */
 	public Optional<PoolMetrics> getPoolMetrics() {
 		if (this.credentials.isWithPool() && this.mariaDBPool != null) {
 			return this.mariaDBPool.getMetrics();
