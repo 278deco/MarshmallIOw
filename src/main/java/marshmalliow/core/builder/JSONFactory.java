@@ -578,7 +578,7 @@ public class JSONFactory {
 	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, Directory directory,
 			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
-		if (baseClass == null || !(baseClass.isInstance(JSONFile.class))) {
+		if (baseClass == null || !(JSONFile.class.isAssignableFrom(baseClass))) {
 			throw new IllegalArgumentException("The base class is not a child of JSONFile.");
 		}
 		
@@ -672,7 +672,7 @@ public class JSONFactory {
 	public <E extends JSONFile> E createSecuredJSONFileFromBase(Class<E> baseClass, Directory directory,
 			String jsonName, @Nullable JSONContainer rootContainer, FileCredentials credentials) throws IllegalArgumentException, IOException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
-		if (baseClass == null || !(baseClass.isInstance(JSONFile.class))) {
+		if (baseClass == null || !(JSONFile.class.isAssignableFrom(baseClass))) {
 			throw new IllegalArgumentException("The base class is not a child of JSONFile.");
 		}
 		
