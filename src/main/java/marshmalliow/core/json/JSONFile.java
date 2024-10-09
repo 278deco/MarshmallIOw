@@ -78,9 +78,9 @@ public class JSONFile extends IOClass {
 	@Override
 	public void readFile(boolean forceRead) throws IOException {
 		synchronized (mutex) {
-			if(Files.size(getFullPath()) <= 0) {
-				this.isOpen = true; //If the file content is empty but the user still wants to read it, then define the file as open
-				this.content = new JSONObject();
+			if(!Files.exists(getFullPath()) || Files.size(getFullPath()) <= 0) {
+				this.isOpen = true; //If the file content is empty or doesn't exist on the disk, define the file as open
+				this.content = new JSONObject(); //TODO This is a major flaw because we cannot read a JSONArray file as JSONArray if the file doesn't exist
 			}else if((forceRead || !this.isOpen)) {
 				InputStream stream = null;
 				BufferedReader reader = null;
