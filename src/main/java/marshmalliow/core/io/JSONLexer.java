@@ -97,7 +97,7 @@ public class JSONLexer {
 				result = new JSONToken(JSONTokenEnum.EOF);
 			}else {
 				final char readChar = buffer[this.bufferIndex];
-				
+								
 				switch (readChar) {
 					case ' ': break;
 					case '\n': break;
@@ -163,11 +163,65 @@ public class JSONLexer {
 		
 		boolean strEnd = false;
 		while(!strEnd) {
-			strbuff[strPos++] = this.buffer[this.bufferIndex];
-			
-			if (strbuff[strPos-1] == '\"') {
-				strEnd = strPos-2 >= 0 && strbuff[strPos - 2] != '\\';
+			char c = this.buffer[this.bufferIndex];
+						
+			if(c == '\"') {
+				strEnd = strPos-1 >= 0 && strbuff[strPos - 1] != '\\';
 			}
+			
+			if(c == '\\') { // Handle escape character
+				incBuffer(1); // Get the escaped character
+				final char escapedChar = this.buffer[this.bufferIndex];
+				
+				switch(escapedChar) {
+				case '\"':
+					c = '\"';
+					break;
+				case '\\':
+					c = '\\';
+					break;
+				case '/':
+					c = '/';
+					break;
+				case 'b':
+					c = '\b';
+					break;
+				case 'f':
+					c = '\f';
+					break;
+				case 'n':
+					c = '\n';
+					break;
+				case 'r':
+					c = '\r';
+					break;
+				case 't':
+					c = '\t';
+					break;
+				case 'u': //Unicode escape
+					char[] unicode = new char[4];
+					for(int i = 0; i < 4; i++) {
+						incBuffer(1);
+						if(bufferIndex >= counter) {
+							throw new JSONParseException("Unexpected end of file while reading unicode escape");
+						}
+						if(!isValidHexa(this.buffer[this.bufferIndex])) {
+							throw new JSONParseException("Invalid unicode escape character: " + c);
+						}
+						unicode[i] = this.buffer[this.bufferIndex];
+					}
+					try {
+						c = (char) Integer.parseInt(new String(unicode), 16);						
+					}catch(NumberFormatException e) {
+						throw new JSONParseException("Invalid unicode escape character: " + c);
+					}
+					break;
+				default:
+					throw new JSONParseException("Unexpected escape character: \\" + escapedChar);
+				}
+			}
+			
+			strbuff[strPos++] = c;
 			
 			if(!strEnd && incBuffer(1)) {
 				char[] nstrbuff = new char[strbuff.length+this.buffer.length];
@@ -349,6 +403,36 @@ public class JSONLexer {
 			case '.':
 			case '+':
 			case '-':
+				return true;
+			default:
+				return false;
+		}
+	}
+	
+	private boolean isValidHexa(char c) {
+		switch (c) {
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case 'a':
+			case 'A':
+			case 'b':
+			case 'B':
+			case 'c':
+			case 'C':
+			case 'd':
+			case 'D':
+			case 'e':
+			case 'E':
+			case 'f':
+			case 'F':
 				return true;
 			default:
 				return false;
