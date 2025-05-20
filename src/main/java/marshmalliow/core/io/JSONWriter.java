@@ -118,7 +118,42 @@ public class JSONWriter {
 	
 	private String writeValue(Object value) {
 		if(value instanceof String) {
-			return "\""+((String)value).replaceAll("(^|[^\\\\])\"", "$1\\\\\"")+"\"";
+			final StringBuilder sb = new StringBuilder("\"");
+			for(char c : value.toString().toCharArray()) {
+				switch(c) {
+					case '\b':
+						sb.append("\\b");
+						break;
+					case '\f':
+						sb.append("\\f");
+						break;
+					case '\n':
+						sb.append("\\n");
+						break;
+					case '\r':
+						sb.append("\\r");
+						break;
+					case '\t':
+						sb.append("\\t");
+						break;
+					case '\"':
+						sb.append("\\\"");
+						break;
+					case '\\':
+						sb.append("\\\\");
+						break;
+					default:
+						if(c < 0x20 || c > 0x7E) {
+							sb.append("\\u");
+							sb.append(String.format("%04X", (int)c));
+						}else {
+							sb.append(c);
+						}
+				}
+			}
+			sb.append("\"");
+			
+			return sb.toString();
 		}else {
 			return value.toString();
 		}

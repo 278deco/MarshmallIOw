@@ -231,6 +231,7 @@ public class JSONFactory {
 			writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
 			
 			new JSONWriter(container).write(writer);
+			writer.flush();
 			
 			return output.toByteArray();
 		}finally {
@@ -678,7 +679,6 @@ public class JSONFactory {
 		
 		try {
 			final String finalName = jsonName.replace(".json", "");
-			
 			if(rootContainer == null) {
 				final Constructor<E> constructor = 
 						baseClass.getConstructor(Directory.class, String.class, FileCredentials.class);
