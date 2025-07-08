@@ -361,26 +361,34 @@ public class MariaDBImplementation extends DBImplementation {
         if(this.connection == null) throw new SQLException("Cannot execute select method if no connection is open");
         if(requests.size() != arguments.size()) throw new IllegalArgumentException("Incorrect number of arguments and requests for the prepared batch");
 
-        try {
-			Mono.from(this.connection.beginTransaction())
-				.doOnNext(success -> {
-				for(int i = 0; i < requests.size(); i++) {
-					final List<Object> argObj = arguments.get(i);
-					final Statement statement = this.connection.createStatement(requests.get(i));
-					
-                    for(int argIndex = 0; argIndex < argObj.size(); argIndex++) {
-                    	if (argObj.get(argIndex) instanceof NullValue) statement.bindNull(argIndex, ((NullValue) argObj.get(i)).getType());
-            			else statement.bind(i, argObj.get(argIndex));
-                    }
-                    
-                    Mono.from(statement.execute()).block();
-                }
-
-			}).then(Mono.from(this.connection.commitTransaction()))
-			.subscribe();
-		}finally {
-			if(this.autoClose) closeConnection();
-		}
+        Mono.from(this.connection.beginTransaction())
+        	.thenMany(
+        		Flux.range(0, requests.size())
+        		.flatMap(i -> {
+        			final Statement statement = this.connection.createStatement(requests.get(i));
+        			final List<Object> argObj = arguments.get(i);
+        			
+        			for(int argidx = 0; argidx < argObj.size(); argidx++) {
+						if (argObj.get(argidx) instanceof NullValue) statement.bindNull(argidx, ((NullValue) argObj.get(argidx)).getType());
+						else statement.bind(argidx, argObj.get(argidx));
+					}
+        			
+        			return Mono.from(statement.execute());
+        		})
+        	)
+        	.then(Mono.from(this.connection.commitTransaction()))
+        	.doOnError(error -> {
+        		this.connection.rollbackTransaction();
+        	})
+        	.doFinally(sig -> {
+        		if(this.autoClose)
+					try {
+						closeConnection();
+					} catch (SQLException e) {
+						throw new RuntimeException("Error while closing connection after prepared batch", e);
+					}
+        	})
+        	.subscribe();
     }
 	
 	private <E> List<E> rowIterator(Row row, Class<E> castingClass) {
