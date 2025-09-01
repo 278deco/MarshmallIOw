@@ -3,10 +3,12 @@ package marshmalliow.core.json.objects;
 public interface JSONContainer {
 	
 	/**
-	 * Set the contentModified flag to the given value.
-	 * @param value
+	 * Reset the contentModified flag to false. <br/>
+	 * This method should be called after the content has been saved or 
+	 * after the modifications have been acknowledged.
+	 * 
 	 */
-	public void setContentModified(boolean value);
+	public void resetModified();
 	
 	/**
 	 * Get the contentModified flag.
