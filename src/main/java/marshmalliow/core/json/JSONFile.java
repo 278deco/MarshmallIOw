@@ -19,9 +19,7 @@ import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.io.JSONWriter;
-import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
-import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.FileType;
 import marshmalliow.core.objects.IOClass;
@@ -31,40 +29,21 @@ import marshmalliow.core.security.FileCredentials;
 public class JSONFile extends IOClass {
 	
 	private JSONContainer content;
-	private final Cipher cipher; //Only use when the file is encrypted
+	private final Cipher cipher; // Only use when the file is encrypted
 	
 	private final Object mutex = new Object();
+	private boolean hasBeenRead = false; // Indicates if the file has been read at least once from disk. Does not reset after a save.
 	
-	private boolean isOpen;
-	
-	public JSONFile(Directory dir, String name, JSONContainer content) {
-		super(dir, name);
-		this.content = content;
-		this.isOpen = true;
-		this.cipher = null;
-	}
-	
-	public JSONFile(Directory dir, String name) {
-		super(dir, name);
-		this.content = null;
-		this.isOpen = false;
-		this.cipher = null;
-	}
-	
-	public JSONFile(Directory dir, String name, JSONContainer content, FileCredentials credential) {
-		super(dir, name, credential);
-		this.content = content;
-		this.isOpen = true;
+	protected JSONFile(JSONFileBuilder<?> builder) {
+		super(builder.directory, builder.name, builder.credentials);
 		
-		this.cipher = initCipher();
-	}
-	
-	public JSONFile(Directory dir, String name, FileCredentials credential) {
-		super(dir, name, credential);
-		this.content = null;
-		this.isOpen = false;
+		this.content = builder.base;
 		
-		this.cipher = initCipher();
+		if(builder.credentials != null) {
+			this.cipher = initCipher();
+		} else {
+			this.cipher = null;
+		}
 	}
 	
 	private Cipher initCipher() {
@@ -74,27 +53,34 @@ public class JSONFile extends IOClass {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public void readFile(boolean forceRead) throws IOException {
 		synchronized (mutex) {
-			if(!Files.exists(getFullPath()) || Files.size(getFullPath()) <= 0) {
-				this.isOpen = true; //If the file content is empty or doesn't exist on the disk, define the file as open
-				this.content = new JSONObject(); //TODO This is a major flaw because we cannot read a JSONArray file as JSONArray if the file doesn't exist
-			}else if((forceRead || !this.isOpen)) {
-				InputStream stream = null;
-				BufferedReader reader = null;
-				try {
-					stream = Files.newInputStream(getFullPath());
-					reader = determineInputEncryption(stream);
-									
-					final JSONParser parser = new JSONParser(new JSONLexer(reader));
+			// Check for the file existence on the disk
+			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
+			final boolean canRead = Files.isReadable(getFullPath());
+			
+			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
+			if(this.content.isModified() && !forceRead) {
+				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
+			}
+			
+			// If the file exists and is readable, we read it
+			if(exists && canRead) {
+				try(final BufferedReader reader = determineInputEncryption(Files.newInputStream(getFullPath()))) {
+					final JSONLexer lexer = new JSONLexer(reader);
+					final JSONParser parser = new JSONParser(lexer);
 					this.content = parser.parse();
-					this.isOpen = true;
-				}finally {
-					if(reader != null) reader.close();
-					if(stream != null) stream.close();
+					this.hasBeenRead = true; // Mark as read
+					this.content.resetModified(); // Reset the modified state after reading
+				} catch (Exception e) {
+					throw new IOException("Failed to read the JSON file: " + e.getMessage(), e);
 				}
+			} else if (!exists) {
+				this.hasBeenRead = false; // If the file does not exist, mark as not read
+			} else {
+				throw new IOException("The file is not readable or does not exist.");
 			}
 		}
 	}
@@ -131,32 +117,33 @@ public class JSONFile extends IOClass {
 			}
 		}
 	}
-			
+
 	@Override
 	public void saveFile(boolean forceSave) throws IOException {
 		synchronized (mutex) {
-			if(this.isOpen && (forceSave || this.content.isModified())) {
-				OutputStream stream = null;
-				BufferedWriter writer = null;
-				try {
-					stream = Files.newOutputStream(getFullPath());
-					writer = determineOutputEncryption(stream);
-					
-					final JSONWriter jsonWriter = new JSONWriter(this.content);
-					jsonWriter.write(writer);
-				}finally {
-					if(writer != null) {
-						writer.flush();
-						writer.close();
-					}
-					if(stream != null) {
-						stream.flush();
-						stream.close();
-					}
-				}
-				
+			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
+			
+			if(!forceSave && exists && !this.hasBeenRead) {
+				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
+			}
+			
+			// If the content has not been modified and we are not forcing a save, we do not save the file again.
+			if(!this.content.isModified() && !forceSave) {
+				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			}
+			
+			try(final BufferedWriter writer = determineOutputEncryption(Files.newOutputStream(getFullPath()))) {
+				final JSONWriter jsonWriter = new JSONWriter(this.content);
+				jsonWriter.write(writer);
+				this.content.resetModified(); // Reset the modified state after saving
+			} catch (Exception e) {
+				throw new IOException("Failed to save the JSON file: " + e.getMessage(), e);
 			}
 		}
+	}
+	
+	public void saveFile() throws IOException {
+		this.saveFile(false);
 	}
 	
 	private BufferedWriter determineOutputEncryption(OutputStream fos) throws IOException {
@@ -187,44 +174,74 @@ public class JSONFile extends IOClass {
 			}
 		}
 	}
-	
-	public void saveFile() throws IOException {
-		this.saveFile(false);
-	}
-	
-	public void reset() {
-		synchronized (mutex) {
-			this.content = null;			
-		}
-	}
-	
-	public void setPath(Directory dir) {
-		synchronized (mutex) {
-			this.directory = dir;
-		}
-	}
-	
-	public JSONContainer getContent() {
-		return content;
-	}
-	
-	public JSONObject getContentAsObject() {
-		if(this.content instanceof JSONObject) return (JSONObject) this.content;
-		else return null;
-	}
-	
-	public JSONArray getContentAsArray() {
-		if(this.content instanceof JSONArray) return (JSONArray) this.content;
-		else return null;
-	}
-	
-	@Override
-	public String getFullName() {
-		return this.fileName+".json";
-	}
 
 	@Override
 	public FileType getFileType() {
 		return FileType.JSON;
 	}
+
+	@Override
+	public String getFileWithExtension() {
+		return this.fileName + ".json";
+	}
+	
+	public JSONContainer getContent() {
+		synchronized (mutex) {
+			return this.content;
+		}
+	}
+	
+	public static <T extends JSONFile> JSONFileBuilder<T> builder(Class<T> clazz) {
+		return new JSONFileBuilder<>(clazz);
+	}
+	
+	public static JSONFileBuilder<JSONFile> builder() {
+		return new JSONFileBuilder<>(JSONFile.class);
+	}
+	
+	public static class JSONFileBuilder<T extends JSONFile> {
+		private final Class<T> clazz;
+		
+		private Directory directory;
+		private String name;
+		private JSONContainer base;
+		private FileCredentials credentials;
+		
+		
+		public JSONFileBuilder(Class<T> clazz) {
+			this.clazz = clazz;
+		}
+		public JSONFileBuilder<T> directory(Directory directory) {
+			this.directory = directory;
+			return this;
+		}
+		
+		public JSONFileBuilder<T> name(String name) {
+			this.name = name;
+			return this;
+		}
+		
+		public JSONFileBuilder<T> base(JSONContainer base) {
+			this.base = base;
+			return this;
+		}
+		
+		public JSONFileBuilder<T> credentials(FileCredentials credentials) {
+			this.credentials = credentials;
+			return this;
+		}
+		
+		public T build() {
+			if (this.directory == null || this.name == null || this.base == null) {
+				throw new IllegalArgumentException("Directory, name and JSONContainer base must be set");
+			}
+			
+			try {
+				return clazz.getConstructor(JSONFileBuilder.class).newInstance(this);
+			}catch(ReflectiveOperationException e) {
+				throw new RuntimeException("Failed to create JSONFile instance", e);
+			}
+		}
+	}
+
 }

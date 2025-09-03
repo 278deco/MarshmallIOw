@@ -11,16 +11,14 @@ import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.objects.Directory;
@@ -35,47 +33,24 @@ import marshmalliow.core.security.FileCredentials;
  * @author 278deco
  */
 public class TextFile extends IOClass {
-
-	private static final Logger LOGGER = LogManager.getLogger(TextFile.class);
 	
+	private final AtomicBoolean contentModified = new AtomicBoolean(false);
 	private List<String> content;
+	
 	private final Cipher cipher; //Only use when the file is encrypted
 	
-	/**
-	 * Create new TextFile instance
-	 * @param dir The directory of the TextFile
-	 * @param name The name of the file <strong>without extension</strong>
-	 */
-	public TextFile(Directory dir, String name) {
-		super(dir, name);
-		this.cipher = null;
-		
-		initFile();
-	}
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	private boolean hasBeenRead = false; // Indicates if the file has been read at least once from disk. Does not reset after a save.
 	
-	/**
-	 * Create new TextFile instance
-	 * @param dir The directory of the TextFile
-	 * @param name The name of the file <strong>without extension</strong>
-	 * @param credentials The {@link FileCredentials} associated with this file
-	 */
-	public TextFile(Directory dir, String name, FileCredentials credentials) {
-		super(dir, name, credentials);
-		this.cipher = initCipher();
-		
-		initFile();
-	}
 	
-	private void initFile() {
-		try {
-			
-			if(!Files.exists(getFullPath()))
-				Files.createFile(getFullPath());
-			this.content = new ArrayList<>();
-			
-		} catch (IOException e) {
-			LOGGER.error("Unexpected error while loading text file [dir: {}, name: {}] with message {}", this.directory.getName(), this.fileName, e.getMessage());
-		}
+	protected TextFile(TextFileBuilder<?> builder) {
+		super(builder.directory, builder.name, builder.credentials);
+		
+		if(builder.credentials != null) {
+			this.cipher = initCipher();
+		} else {
+			this.cipher = null;
+		}		
 	}
 	
 	private Cipher initCipher() {
@@ -91,30 +66,41 @@ public class TextFile extends IOClass {
 	 * @param forceRead Isn't used in this function
 	 */
 	@Override
-	public void readFile(boolean forceRead) {
-		InputStream input = null;
-		BufferedReader buffer = null;
-		
+	public void readFile(boolean forceRead) throws IOException {
 		try {
-			input = Files.newInputStream(getFullPath());
-			buffer = determineInputEncryption(input);
+			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are reading from disk
 			
-			if(!this.content.isEmpty()) this.content.clear();
+			// Check for the file existence on the disk
+			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
+			final boolean canRead = Files.isReadable(getFullPath());
 			
-			String line;
-			while( (line = buffer.readLine()) != null) {
-				this.content.add(line);
+			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
+			if(this.contentModified.get() && !forceRead) {
+				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
 			}
 			
-		}catch(IOException e) {
-			LOGGER.error("Unexpected error while loading text file [dir: {}, name: {}] with message {}", this.directory.getName(), this.fileName, e.getMessage());
-		}finally {
-			try { if(buffer != null) buffer.close(); }catch(IOException e) {}
-			try { if(input != null) input.close(); }catch(IOException e) {}
+			// If the file exists and is readable, we read it
+			if(exists && canRead) {
+				try (final BufferedReader reader = determineInputEncryption(Files.newInputStream(getFullPath()))) {
+		            String line;
+		            while ((line = reader.readLine()) != null) {
+		                this.content.add(line);
+		            }
+		        } catch (IOException e) {
+		        	throw new IOException("Failed to read the text file: " + e.getMessage(), e);
+		        }
+			}else if (!exists) {
+				this.hasBeenRead = false; // If the file does not exist, mark as not read
+			} else {
+				throw new IOException("The file is not readable or does not exist.");
+			}
+			
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 	
-	public void readFile() {
+	public void readFile() throws IOException {
 		this.readFile(false);
 	}
 	
@@ -147,41 +133,37 @@ public class TextFile extends IOClass {
 		}
 	}
 	
-	/**
-	 * Write all lines contained in the list to the disk<br>
-	 * This method will always return true as the file is saved in his own thread
-	 * @param forceSave Isn't used in this function
-	 */
 	@Override
-	public void saveFile(boolean forceSave) {
-		new Thread(new Runnable() {
+	public void saveFile(boolean forceSave) throws IOException {
+		try {
+			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are writing to disk
 			
-			@Override
-			public void run() {
-				OutputStream output = null;
-				BufferedWriter buffer = null;
-				
-				try {
-					output = Files.newOutputStream(getFullPath());
-					buffer = determineOutputEncryption(output);
-					
-					for(int i = 0; i < content.size(); i++) {
-						buffer.write(content.get(i));
-						if(i != content.size()-1) buffer.newLine();
-					}
-					
-				}catch(IOException e) {
-					LOGGER.error("Unexpected error while writing to text file [dir: {}, name: {}] with message {}", directory.getName(), fileName, e.getMessage());
-				}finally {
-					try { if(buffer != null) buffer.close(); }catch(IOException e) {}
-					try { if(output != null) output.close(); }catch(IOException e) {}
-				}
+			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
+			
+			if(!forceSave && exists && !this.hasBeenRead) {
+				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
 			}
-		},"File-Save-Thread").start();
-		
+			
+			if(!this.contentModified.get() && !forceSave) {
+				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			}
+			
+			try(final BufferedWriter writer = determineOutputEncryption(Files.newOutputStream(getFullPath()))) {
+
+				for(int i = 0; i < content.size(); i++) {
+					writer.write(content.get(i));
+					if(i != content.size()-1) writer.newLine();
+				}
+				
+			} catch (IOException e) {
+				throw new IOException("Failed to write the text file: " + e.getMessage(), e);
+			}
+		} finally {
+			lock.writeLock().unlock();
+		}	
 	}
 	
-	public void saveFile() {
+	public void saveFile() throws IOException {
 		this.saveFile(false);
 	}
 	
@@ -215,14 +197,60 @@ public class TextFile extends IOClass {
 	}
 
 	/**
-	 * Add a new line to content of the file<br>
+	 * Add a new line(s) to content of the file<br>
 	 * If the file is never saved, the line while only be added to this instance of the TextFile
-	 * @param lines all the line which needs to added
+	 * 
+	 * @param lines One or more lines which needs to added
 	 * @see #saveFile()
 	 */
 	public void addNewLine(String... lines) {
-		for(String line : lines) {
-			if(line != null && line != "" && !line.isBlank() && !line.isEmpty()) this.content.add(line);
+		try {
+			lock.writeLock().lock();
+			this.contentModified.set(true);
+		
+			for(String line : lines) {
+				if(line != null && line != "" && !line.isBlank() && !line.isEmpty()) this.content.add(line);
+			}
+		}	finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * Add a new line(s) to content of the file<br>
+	 * If the file is never saved, the line while only be added to this instance of the TextFile
+	 * 
+	 * @param lines One or more lines which needs to added
+	 * @see #saveFile()
+	 */
+	public void addNewLine(List<String> lines) {
+		try {
+			lock.writeLock().lock();
+			this.contentModified.set(true);
+			
+			for(String line : lines) {
+				if(line != null && line != "" && !line.isBlank() && !line.isEmpty()) this.content.add(line);
+			}
+		}	finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * Add a single new line to content of the file<br>
+	 * If the file is never saved, the line while only be added to this instance of the TextFile
+	 * 
+	 * @param line The line which needs to be added
+	 * @see #saveFile()
+	 */
+	public void addNewLine(String line) {
+		try {
+			lock.writeLock().lock();
+			this.contentModified.set(true);
+
+			if(line != null) this.content.add(line);
+		}	finally {
+			lock.writeLock().unlock();
 		}
 	}
 	
@@ -230,20 +258,66 @@ public class TextFile extends IOClass {
 	 * Clear all file's content
 	 */
 	public void clearContent() {
-		this.content.clear();
-	}
-	
-	public List<String> getContent() {
-		return Collections.unmodifiableList(this.content);
+		try {
+			lock.writeLock().lock();
+			this.contentModified.set(true);
+
+			this.content.clear();
+		}	finally {
+			lock.writeLock().unlock();
+		}
 	}
 	
 	/**
-	 * Return the content of the i line
+	 * Get the content of the file as an unmodifiable list<br/>
+	 * Modifications to the returned list will throw {@link UnsupportedOperationException}
+	 * 
+	 * @return the content of the file
+	 * @see #addNewLine(String)
+	 * @see #addNewLine(String...)
+	 * @see #addNewLine(List)
+	 */
+	public List<String> getContent() {
+		try {
+			lock.readLock().lock();
+			
+			return Collections.unmodifiableList(this.content);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * Get a specific line of file's content by its index
+	 * 
 	 * @param i The index of the line
-	 * @return the line of the file
+	 * @return the line at the specified index or <code>null</code> if the index is out of bounds
 	 */
 	public String getLine(int i) {
-		return this.content.size() <= i ? null : this.content.get(i);
+		try {
+			lock.readLock().lock();
+
+			return this.content.size() <= i ? null : this.content.get(i);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * Get a random line of file's content using a {@link Random} instance<br/>
+	 * If the file is empty, it will return an empty string
+	 * 
+	 * @param randomGenerator An instance of Random generator to use
+	 * @return a random line of the file or null if the file is empty
+	 */
+	public String getRandomLine(Random randomGenerator) {
+		try {
+			lock.readLock().lock();
+
+			return getContentSize() > 0 ? getLine(randomGenerator.nextInt(getContentSize())) : null;		
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 	
 	/**
@@ -251,15 +325,12 @@ public class TextFile extends IOClass {
 	 * @return the size of the content
 	 */
 	public int getContentSize() {
-		return this.content.size();
-	}
-	
-	/**
-	 * Get a random line of file's content
-	 * @return a random line of the file
-	 */
-	public String getRandomLine(Random randomGenerator) {
-		return getContentSize() > 0 ? getLine(randomGenerator.nextInt(getContentSize())) : "";
+		try {
+			lock.readLock().lock();
+			return this.content == null ? 0 : this.content.size();
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	@Override
@@ -268,8 +339,56 @@ public class TextFile extends IOClass {
 	}
 
 	@Override
-	public String getFullName() {
+	public String getFileWithExtension() {
 		return this.fileName+".txt";
+	}
+	
+	public static <T extends TextFile> TextFileBuilder<T> builder(Class<T> clazz) {
+		return new TextFileBuilder<>(clazz);
+	}
+	
+	public static TextFileBuilder<TextFile> builder() {
+		return new TextFileBuilder<>(TextFile.class);
+	}
+	
+	public static class TextFileBuilder<T extends TextFile> {
+		private final Class<T> clazz;
+		
+		private Directory directory;
+		private String name;
+		private FileCredentials credentials;
+		
+		public TextFileBuilder(Class<T> clazz) {
+			this.clazz = clazz;
+		}
+		
+		public TextFileBuilder<T> directory(Directory directory) {
+			this.directory = directory;
+			return this;
+		}
+		
+		public TextFileBuilder<T> name(String name) {
+			this.name = name;
+			return this;
+		}
+		
+		public TextFileBuilder<T> credentials(FileCredentials credentials) {
+			this.credentials = credentials;
+			return this;
+		}
+		
+		public T build() {
+			if (this.directory == null || this.name == null) {
+				throw new IllegalArgumentException("The directory or name cannot be null");
+			}
+			
+			try {
+				return clazz.getConstructor(TextFileBuilder.class).newInstance(this);
+			} catch (Exception e) {
+				throw new RuntimeException("Couldn't create a new instance of "+clazz.getName(), e);
+			}
+		}
+		
 	}
 	
 }
