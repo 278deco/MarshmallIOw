@@ -387,7 +387,7 @@ public class IOCacheManager {
 				try {
 					obj.saveFile(forceSave);
 				}catch(IOException e) {
-					errorBuffer.append(obj.getFullName()+", ");
+					errorBuffer.append(obj.getFileWithExtension()+", ");
 				}
 			}
 			
