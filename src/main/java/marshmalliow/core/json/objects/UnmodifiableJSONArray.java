@@ -10,6 +10,7 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+@Deprecated(forRemoval = true, since = "0.4.0")
 public class UnmodifiableJSONArray implements List<Object>, JSONContainer {
 		
 	private final JSONArray list;
@@ -336,8 +337,8 @@ public class UnmodifiableJSONArray implements List<Object>, JSONContainer {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setContentModified(boolean value) {
-		throw new UnsupportedOperationException();
+	public void resetModified() {
+		list.resetModified();		
 	}
 	
 	/**

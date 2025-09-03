@@ -4,430 +4,653 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-public class JSONArray extends ArrayList<Object> implements JSONContainer {
+public class JSONArray implements JSONContainer {
 
-	private static final long serialVersionUID = 3593877469226039660L;
-	
+	private final ArrayList<Object> list;
 	private final AtomicBoolean contentModified = new AtomicBoolean(false);
-	protected final Object mutex;
-	
-	/**
-	 * Create a new {@link JSONArray} with a mutex object to synchronize access
-	 * @param mutex The mutex object to synchronize access
-	 */
-	public JSONArray(Object mutex) {
-		super();
-		this.mutex = mutex;
-	}
-	
-	/**
-	 * Create a new {@link JSONArray} with a mutex object to synchronize.<br/>
-	 * A given initial capacity is used to optimize the performance.
-	 * @param initialCapacity The initial capacity of the list
-	 * @param mutex The mutex object to synchronize access
-	 */
-	public JSONArray(int initialCapacity, Object mutex) {
-		super(initialCapacity);
-		this.mutex = mutex;
-	}
-	
-	/**
-	 * Create a new {@link JSONArray} with a mutex object to synchronize.<br/>
-	 * The given collection is used to initialize the new list.
-	 * @param c The collection to initialize the list
-	 * @param mutex The mutex object to synchronize access
-	 */
-	public JSONArray(Collection<? extends Object> c, Object mutex) {
-		super(c);
-		this.mutex = mutex;
-	}
-	
+
+	protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
 	/**
 	 * Create a new {@link JSONArray}.<br/>
-	 * A new mutex {@link Object} is created to synchronize access.
+	 * A new mutex {@link ReentrantReadWriteLock} is created to synchronize access.
 	 */
 	public JSONArray() {
-		this(new Object());
+		this.list = new ArrayList<>();
 	}
-	
+
 	/**
-     * Create a new {@link JSONArray} with a given initial capacity.<br/>
-     * A new mutex {@link Object} is created to synchronize access.
-     * @param initialCapacity The initial capacity of the list
-     */
+	 * Create a new {@link JSONArray} with a given initial capacity.<br/>
+	 * A new mutex {@link ReentrantReadWriteLock} is created to synchronize access.
+	 * 
+	 * @param initialCapacity The initial capacity of the list
+	 */
 	public JSONArray(int initialCapacity) {
-		this(initialCapacity, new Object());
+		this.list = new ArrayList<>(initialCapacity);
 	}
-	
+
 	/**
 	 * Create a new {@link JSONArray} with a given collection.<br/>
-	 * A new mutex {@link Object} is created to synchronize access.
-	 * 
+	 * A new mutex {@link ReentrantReadWriteLock} is created to synchronize access.
+	 *
 	 * @param c The collection to initialize the list
 	 */
 	public JSONArray(Collection<? extends Object> c) {
-		this(c, new Object());
+		this.list = new ArrayList<>(c);
 	}
-	
-	
+
 	/**
-	 * Add an element at the given index to the list. The <code>contentModified</code> flag is set to true.<br/>
+	 * Add an element at the given index to the list. The
+	 * <code>contentModified</code> flag is set to true.<br/>
 	 * The list is synchronized using the mutex object.
-	 * @param index The index to add the element
+	 * 
+	 * @param index   The index to add the element
 	 * @param element The element to add
 	 */
-	@Override
 	public void add(int index, Object element) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			super.add(index, element);
+			this.list.add(index, element);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
 	 * Add an element to the list. The <code>contentModified</code> flag is set to
 	 * true.<br/>
 	 * The list is synchronized using the mutex object.
-	 * 
+	 *
 	 * @param e The element to add
 	 */
-	@Override
 	public boolean add(Object e) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.add(e);
+			return list.add(e);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * Add all elements of the given collection to the list. The <code>contentModified</code> flag is set to true.<br/>
-     * The list is synchronized using the mutex object.
-     * @param c The collection
-     */
-	@Override
+	 * Add all elements of the given collection to the list. The
+	 * <code>contentModified</code> flag is set to true.<br/>
+	 * The list is synchronized using the mutex object.
+	 * 
+	 * @param c The collection
+	 */
 	public boolean addAll(Collection<? extends Object> c) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.addAll(c);
+			return list.addAll(c);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * Add all elements of the given collection to the list at the specific index.
-     *  The <code>contentModified</code> flag is set to true.<br/>
-     * The list is synchronized using the mutex object.
-     * @param index The index where to add the elements
-     * @param c The collection
-     */
-	@Override
+	 * Add all elements of the given collection to the list at the specific index.
+	 * The <code>contentModified</code> flag is set to true.<br/>
+	 * The list is synchronized using the mutex object.
+	 * 
+	 * @param index The index where to add the elements
+	 * @param c     The collection
+	 */
 	public boolean addAll(int index, Collection<? extends Object> c) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.addAll(index, c);
+			return list.addAll(index, c);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 	
 	/**
-	 * Get the element at the given index. The list is synchronized using the mutex object.
+	 * Get the element at the given index. The list is synchronized using the mutex
+	 * object.
+	 * 
 	 * @param index The index of the element
 	 * @return The element at the given index
 	 */
-	@Override
 	public Object get(int index) {
-		synchronized (mutex) {
-			return super.get(index);
+		try {
+			lock.readLock().lock();
+			return list.get(index);
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
-	
+
 	/**
-	 * Increases the capacity of this ArrayList instance, if necessary, 
-	 * to ensure that it can hold at least the number of elements 
-	 * specified by the minimum capacity argument.
+	 * Get the element at the given index. The list is synchronized using the mutex
+	 * object.
 	 * 
+	 * @param <E>   The expected type of the element
+	 * @param index The index of the element
+	 * @param clazz The class of the expected type
+	 * @return The element at the given index
+	 */
+	public <E> E  get(int index, Class<E> clazz) {
+		try {
+			lock.readLock().lock();
+			return clazz.cast(list.get(index));
+		} catch (ClassCastException ex) {
+			return null;
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	public <E> E getOrDefault(int index, Class<E> clazz, E defaultValue) {
+		try {
+			lock.readLock().lock();
+			return clazz.cast(list.get(index));
+		} catch (ClassCastException | IndexOutOfBoundsException ex) {
+			return defaultValue;
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	public JSONObject getJSONObject(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof JSONObject) return (JSONObject) value;
+		return null;
+	}
+	
+	public JSONArray getJSONArray(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof JSONArray) return (JSONArray) value;
+		return null;
+	}
+	
+	public String getString(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof String) return (String) value;
+		return null;
+	}
+	
+	public String getString(int index, Object key, String defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof String) return (String) value;
+		return defaultValue;
+	}
+	
+	public Integer getInt(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof Integer) return (Integer) value;
+		if(value instanceof Number) return ((Number) value).intValue();
+		return null;
+	}
+	
+	public int getInt(int index, Object key, int defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof Integer) return (Integer) value;
+		if(value instanceof Number) return ((Number) value).intValue();
+		return defaultValue;
+	}
+	
+	public Long getLong(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof Long) return (Long) value;
+		if(value instanceof Number) return ((Number) value).longValue();
+		return null;
+	}
+	
+	public Long getLong(int index, Object key, long defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof Long) return (Long) value;
+		if(value instanceof Number) return ((Number) value).longValue();
+		return defaultValue;
+	}
+	
+	public Float getFloat(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof Float) return (Float) value;
+		if(value instanceof Number) return ((Number) value).floatValue();
+		return null;
+	}
+	
+	public Float getFloat(int index, Object key, float defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof Float) return (Float) value;
+		if(value instanceof Number) return ((Number) value).floatValue();
+		return defaultValue;
+	}
+	
+	public Double getDouble(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof Double) return (Double) value;
+		if(value instanceof Number) return ((Number) value).doubleValue();
+		return null;
+	}
+	
+	public Double getDouble(int index, Object key, double defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof Double) return (Double) value;
+		if(value instanceof Number) return ((Number) value).doubleValue();
+		return defaultValue;
+	}
+	
+	public Boolean getBoolean(int index, Object key) {
+		final Object value = list.get(index);
+		if(value == null) return null;
+		if(value instanceof Boolean) return (Boolean) value;
+		if(value instanceof Number) return ((Number) value).intValue() != 0;
+		return null;
+	}
+	
+	public Boolean getBoolean(int index, Object key, boolean defaultValue) {
+		final Object value = list.get(index);
+		if(value == null) return defaultValue;
+		if(value instanceof Boolean) return (Boolean) value;
+		if(value instanceof Number) return ((Number) value).intValue() != 0;
+		return defaultValue;
+	}
+
+	/**
+	 * Increases the capacity of this ArrayList instance, if necessary, to ensure
+	 * that it can hold at least the number of elements specified by the minimum
+	 * capacity argument.
+	 *
 	 * @param minCapacity the desired minimum capacity
-     */
-	@Override
+	 */
 	public void ensureCapacity(int minCapacity) {
-		synchronized (mutex) {
-			this.contentModified.set(true);
-			super.ensureCapacity(minCapacity);
+		try {
+			lock.writeLock().lock();
+			list.ensureCapacity(minCapacity);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
-	protected void removeRange(int fromIndex, int toIndex) {
-		synchronized (mutex) {
-			this.contentModified.set(true);
-			super.removeRange(fromIndex, toIndex);
+	 * {@inheritDoc}
+	 */
+	public JSONArray subList(int fromIndex, int toIndex) {
+		try {
+			lock.readLock().lock();
+			return new JSONArray(new ArrayList<>(list.subList(fromIndex, toIndex)));
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
-	public List<Object> subList(int fromIndex, int toIndex) {
-		synchronized (mutex) {
-			return new JSONArray(super.subList(fromIndex, toIndex), mutex);
-		}
-	}
-	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public void replaceAll(UnaryOperator<Object> operator) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			super.replaceAll(operator);
+			list.replaceAll(operator);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public void sort(Comparator<? super Object> c) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			super.sort(c);
+			list.sort(c);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public Object set(int index, Object element) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.set(index, element);
+			return list.set(index, element);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public void trimToSize() {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			super.trimToSize();
+			list.trimToSize();
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public Object remove(int index) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.remove(index);
+			return list.remove(index);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public boolean remove(Object o) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.remove(o);
+			return list.remove(o);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public boolean retainAll(Collection<?> c) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.retainAll(c); 
-			}
+			return list.retainAll(c);
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public boolean removeAll(Collection<?> c) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.removeAll(c);
+			return list.removeAll(c);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public boolean removeIf(Predicate<? super Object> filter) {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			return super.removeIf(filter);
+			return list.removeIf(filter);
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public void forEach(Consumer<? super Object> action) {
-		synchronized (mutex) {
-			super.forEach(action);
+		try {
+			lock.readLock().lock();
+			list.forEach(action);
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void clear() {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock();
 			this.contentModified.set(true);
-			super.clear();
+			list.clear();
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public int indexOf(Object o) {
-		synchronized (mutex) { return super.indexOf(o); }
+		try {
+			lock.readLock().lock();
+			return list.indexOf(o);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public int lastIndexOf(Object o) {
-		synchronized (mutex) { return super.lastIndexOf(o); }
+		try {
+			lock.readLock().lock();
+			return list.lastIndexOf(o);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
-	@Override
+	 * {@inheritDoc}
+	 */
 	public int size() {
-		synchronized (mutex) {
-			return super.size();
+		try {
+			lock.readLock().lock();
+			return list.size();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isEmpty() {
+		try {
+			lock.readLock().lock();
+			return list.isEmpty();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean contains(Object o) {
+		try {
+			lock.readLock().lock();
+			return list.contains(o);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+
+	public boolean containsAll(Collection<?> c) {
+		try {
+			lock.readLock().lock();
+			return list.containsAll(c);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object[] toArray() {
+		try {
+			lock.readLock().lock();
+			return list.toArray();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <T> T[] toArray(T[] a) {
+		try {
+			lock.readLock().lock();
+			return list.toArray(a);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <T> T[] toArray(IntFunction<T[]> f) {
+		try {
+			lock.readLock().lock();
+			return list.toArray(f);
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
 	
 	/**
-     * {@inheritDoc}
-     */
-	@Override
-	public boolean isEmpty() {
-        synchronized (mutex) {return super.isEmpty();}
-    }
-	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-    public boolean contains(Object o) {
-        synchronized (mutex) {return super.contains(o);}
-    }
-	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		synchronized (mutex) { return super.containsAll(c); }
+	 * Create a new {@link Iterator} for the list. The list is copied to avoid
+	 * concurrent modification exceptions.<br/>
+	 * The list is synchronized using the mutex object.
+	 * 
+	 * @return A new {@link Iterator} for the list
+	 */
+	public Iterator<Object> iterator() {
+		try {
+			lock.readLock().lock();
+			return new ArrayList<>(list).iterator();
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-    public Object[] toArray() {
-        synchronized (mutex) {return super.toArray();}
-    }
+	public Iterator<Object> liveInterator() {
+		try {
+			lock.readLock().lock();
+			return list.iterator();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
 	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-    public <T> T[] toArray(T[] a) {
-        synchronized (mutex) {return super.toArray(a);}
-    }
+	public ListIterator<Object> listIterator() {
+		try {
+			lock.readLock().lock();
+			return new ArrayList<>(list).listIterator();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
 	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-    public <T> T[] toArray(IntFunction<T[]> f) {
-        synchronized (mutex) {return super.toArray(f);}
-    }
+	public ListIterator<Object> liveListIterator() {
+		try {
+			lock.readLock().lock();
+			return list.listIterator();
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
 	
+	public ListIterator<Object> listIterator(int index) {
+		try {
+			lock.readLock().lock();
+			return new ArrayList<>(list).listIterator(index);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	public ListIterator<Object> liveListIterator(int index) {
+		try {
+			lock.readLock().lock();
+			return list.listIterator(index);
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
 	/**
-     * {@inheritDoc}
-     */
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
-		final Iterator<Object> it = iterator();
-		if (!it.hasNext()) return "[]";
+		try {
+			lock.readLock().lock();
+			final Iterator<Object> it = list.iterator();
+			if (!it.hasNext()) {
+				return "[]";
+			}
 
-		final StringBuilder sb = new StringBuilder();
-		sb.append('[');
-		for (;;) {
-			final Object e = it.next();
-			sb.append(e instanceof String ? "\"" + e + "\"" : e);
-			if (!it.hasNext()) return sb.append(']').toString();
-			sb.append(',').append(' ');
-		}
-	}
-	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-	public boolean equals(Object o) {
-		if(this == o) return true;
-		synchronized (mutex) {
-			return super.equals(o);
-		}
-	}
-	
-	/**
-     * {@inheritDoc}
-     */
-	@Override
-	public int hashCode() {
-		synchronized (mutex) {
-			return super.hashCode();
+			final StringBuilder sb = new StringBuilder();
+			sb.append('[');
+			for (;;) {
+				final Object e = it.next();
+				sb.append(e instanceof String ? "\"" + e + "\"" : e);
+				if (!it.hasNext()) {
+					return sb.append(']').toString();
+				}
+				sb.append(',').append(' ');
+			}
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
 
 	/**
-     * {@inheritDoc}
-     */
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void setContentModified(boolean value) {
-		synchronized (mutex) {
-			this.contentModified.set(value);
-		}
+	public void resetModified() {
+		this.contentModified.set(false);
 	}
-	
+
 	/**
-     * {@inheritDoc}
-     */
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean isModified() {
 		return this.contentModified.get();
