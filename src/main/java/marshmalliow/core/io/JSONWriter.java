@@ -62,7 +62,7 @@ public class JSONWriter {
 		writeOutput(writer, parseStartingToken(JSONTokenEnum.LEFT_BRACE.getStringToken(), depth, prettyPrint));
 		
 		int i = 0;
-		for(Map.Entry<String, Object> entry : obj.entrySet()) {
+		for(Map.Entry<String, Object> entry : obj.snapshot().entrySet()) {
 			writeOutput(writer, prettyPrint ? INDENT.repeat(depth+1)+"\""+entry.getKey()+"\":" : "\""+entry.getKey()+"\":");
 			parseElement(writer, entry.getValue(), depth, prettyPrint);
 			
