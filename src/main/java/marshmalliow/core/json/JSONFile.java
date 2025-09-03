@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -19,7 +20,9 @@ import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.io.JSONWriter;
+import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONContainer;
+import marshmalliow.core.json.objects.JSONObject;
 import marshmalliow.core.objects.Directory;
 import marshmalliow.core.objects.FileType;
 import marshmalliow.core.objects.IOClass;
@@ -31,7 +34,7 @@ public class JSONFile extends IOClass {
 	private JSONContainer content;
 	private final Cipher cipher; // Only use when the file is encrypted
 	
-	private final Object mutex = new Object();
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private boolean hasBeenRead = false; // Indicates if the file has been read at least once from disk. Does not reset after a save.
 	
 	protected JSONFile(JSONFileBuilder<?> builder) {
@@ -56,7 +59,8 @@ public class JSONFile extends IOClass {
 
 	@Override
 	public void readFile(boolean forceRead) throws IOException {
-		synchronized (mutex) {
+		try {
+			lock.writeLock().lock(); // Acquire write lock to prevent reads/writes during this operation
 			// Check for the file existence on the disk
 			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
 			final boolean canRead = Files.isReadable(getFullPath());
@@ -82,6 +86,8 @@ public class JSONFile extends IOClass {
 			} else {
 				throw new IOException("The file is not readable or does not exist.");
 			}
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 	
@@ -120,7 +126,9 @@ public class JSONFile extends IOClass {
 
 	@Override
 	public void saveFile(boolean forceSave) throws IOException {
-		synchronized (mutex) {
+		try {
+			lock.readLock().lock(); // Acquire read lock to prevent writes during this operation
+			
 			final boolean exists = Files.exists(getFullPath()) && Files.size(getFullPath()) > 0;
 			
 			if(!forceSave && exists && !this.hasBeenRead) {
@@ -139,6 +147,8 @@ public class JSONFile extends IOClass {
 			} catch (Exception e) {
 				throw new IOException("Failed to save the JSON file: " + e.getMessage(), e);
 			}
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
 	
@@ -186,8 +196,34 @@ public class JSONFile extends IOClass {
 	}
 	
 	public JSONContainer getContent() {
-		synchronized (mutex) {
+		try {
+			lock.readLock().lock();
 			return this.content;
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+	
+	public JSONObject getContentAsObject() {
+		try {
+			lock.readLock().lock();
+
+			if(this.content instanceof JSONObject) return (JSONObject) this.content;
+			else return null;
+		} finally {
+			lock.readLock().unlock();
+		}
+		
+	}
+	
+	public JSONArray getContentAsArray() {
+		try {
+			lock.readLock().lock();
+
+			if(this.content instanceof JSONArray) return (JSONArray) this.content;
+			else return null;
+		} finally {
+			lock.readLock().unlock();
 		}
 	}
 	
