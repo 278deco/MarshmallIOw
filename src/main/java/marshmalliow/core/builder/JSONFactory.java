@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -18,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.concurrent.locks.ReentrantLock;
 
+import marshmalliow.core.exceptions.JSONInitializationException;
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
 import marshmalliow.core.io.JSONWriter;
@@ -252,9 +252,9 @@ public class JSONFactory {
 	 * @param jsonName The name of the file (preferably without the file extension)
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONContainer> E getJSONFileContent(String directoryID, String jsonName, Class<E> classContainer) throws IOException {
+	public <E extends JSONContainer> E getJSONFileContent(String directoryID, String jsonName, Class<E> classContainer) throws JSONInitializationException {
 		return getJSONFileContent(getDirectory(directoryID), jsonName, classContainer);
 	}
 	
@@ -270,9 +270,9 @@ public class JSONFactory {
 	 * @param jsonName The name of the file (preferably without the file extension)
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONContainer> E getJSONFileContent(Path path, String jsonName, Class<E> classContainer) throws IOException {		
+	public <E extends JSONContainer> E getJSONFileContent(Path path, String jsonName, Class<E> classContainer) throws JSONInitializationException {		
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
@@ -292,14 +292,26 @@ public class JSONFactory {
 	 * @param jsonName The name of the file (preferably without the file extension)
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONContainer> E getJSONFileContent(Directory directory, String jsonName, Class<E> classContainer) throws IOException {
+	public <E extends JSONContainer> E getJSONFileContent(Directory directory, String jsonName, Class<E> classContainer) throws JSONInitializationException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		final String finalName = jsonName.replace(".json", "");
+		
+		JSONContainer content;
+		try {
+			content = classContainer.getDeclaredConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new JSONInitializationException("Cannot create instance of the base container.", e);
+		}
 
-		final JSONFile jsonFile = new JSONFile(directory, finalName);
-		jsonFile.readFile();
+		final JSONFile jsonFile = JSONFile.builder().directory(directory).name(finalName).base(content).build();
+		try {
+			jsonFile.readFile();
+		} catch (IOException e) {
+			throw new JSONInitializationException("Cannot read the JSON file.", e);
+		}
 		
 		return classContainer.cast(jsonFile.getContent());
 	}
@@ -317,10 +329,10 @@ public class JSONFactory {
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @param credentials the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
 	public <E extends JSONContainer> E getSecuredJSONFileContent(String directoryID, String jsonName,
-			Class<E> classContainer, FileCredentials credentials) throws IOException {
+			Class<E> classContainer, FileCredentials credentials) throws JSONInitializationException {
 		return getSecuredJSONFileContent(getDirectory(directoryID), jsonName, classContainer, credentials);
 	}
 	
@@ -337,10 +349,10 @@ public class JSONFactory {
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @param credentials the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
 	public <E extends JSONContainer> E getSecuredJSONFileContent(Path path, String jsonName,
-			Class<E> classContainer, FileCredentials credentials) throws IOException {		
+			Class<E> classContainer, FileCredentials credentials) throws JSONInitializationException {		
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
@@ -359,15 +371,27 @@ public class JSONFactory {
 	 * @param classContainer The root of the JSON file to be opened (Object or Array)
 	 * @param credentials the credentials if the file is encrypted
 	 * @return The container with the data of the JSON File
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
 	public <E extends JSONContainer> E getSecuredJSONFileContent(Directory directory, String jsonName,
-			Class<E> classContainer, FileCredentials credentials) throws IOException {
+			Class<E> classContainer, FileCredentials credentials) throws JSONInitializationException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		final String finalName = jsonName.replace(".json", "");
-
-		final JSONFile jsonFile = new JSONFile(directory, finalName, credentials);
-		jsonFile.readFile();
+		
+		JSONContainer content;
+		try {
+			content = classContainer.getDeclaredConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new JSONInitializationException("Cannot create instance of the base container.", e);
+		}
+		
+		final JSONFile jsonFile = JSONFile.builder().directory(directory).name(finalName).base(content).credentials(credentials).build();
+		try {
+			jsonFile.readFile();
+		} catch (IOException e) {
+			throw new JSONInitializationException("Cannot read the JSON file.", e);
+		}
 		
 		return classContainer.cast(jsonFile.getContent());
 	}
@@ -427,15 +451,11 @@ public class JSONFactory {
 	 * @param rootContainer The root of the JSON file to be created (Object or Array)
 	 * @return a new instance of JSONFile
 	 */
-	public JSONFile createJSONFile(Directory directory, String jsonName, @Nullable JSONContainer rootContainer) {
+	public JSONFile createJSONFile(Directory directory, String jsonName, JSONContainer rootContainer) {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		final String finalName = jsonName.replace(".json", "");
 		
-		if(rootContainer == null) {
-			return new JSONFile(directory, finalName);
-		}else {
-			return new JSONFile(directory, finalName, rootContainer);
-		}
+		return JSONFile.builder().directory(directory).name(finalName).base(rootContainer).build();
 	}
 	
 	/**
@@ -455,7 +475,7 @@ public class JSONFactory {
 	 * @return a new instance of JSONFile
 	 */
 	public JSONFile createSecuredJSONFile(String directoryID, String jsonName,
-			@Nullable JSONContainer rootContainer, FileCredentials credentials) {
+			JSONContainer rootContainer, FileCredentials credentials) {
 		return createSecuredJSONFile(getDirectory(directoryID), jsonName, rootContainer, credentials);
 	}
 	
@@ -476,7 +496,7 @@ public class JSONFactory {
 	 * @return a new instance of JSONFile
 	 */
 	public JSONFile createSecuredJSONFile(Path path, String jsonName,
-			@Nullable JSONContainer rootContainer, FileCredentials credentials) {
+			JSONContainer rootContainer, FileCredentials credentials) {
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
@@ -499,15 +519,11 @@ public class JSONFactory {
 	 * @return a new instance of JSONFile
 	 */
 	public JSONFile createSecuredJSONFile(Directory directory, String jsonName,
-			@Nullable JSONContainer rootContainer, FileCredentials credentials) {
+			JSONContainer rootContainer, FileCredentials credentials) {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
 		final String finalName = jsonName.replace(".json", "");
 		
-		if(rootContainer == null) {
-			return new JSONFile(directory, finalName, credentials);
-		}else {
-			return new JSONFile(directory, finalName, rootContainer, credentials);
-		}
+		return JSONFile.builder().directory(directory).name(finalName).base(rootContainer).credentials(credentials).build();
 	}
 	
 	/**
@@ -526,11 +542,11 @@ public class JSONFactory {
 	 * @param rootContainer The root of the JSON file to be created (Object or Array)
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException 
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, String directoryID,
-			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
-		return createJSONFileFromBase(baseClass, getDirectory(directoryID), jsonName, rootContainer);
+	public <E extends JSONFile> E createJSONFileAs(Class<E> clazz, String directoryID,
+			String jsonName, JSONContainer rootContainer) throws JSONInitializationException {
+		return createJSONFileAs(clazz, getDirectory(directoryID), jsonName, rootContainer);
 	}
 	
 	/**
@@ -549,15 +565,15 @@ public class JSONFactory {
 	 * @param rootContainer The root of the JSON file to be created (Object or Array)
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, Path path,
-			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
+	public <E extends JSONFile> E createJSONFileAs(Class<E> clazz, Path path,
+			String jsonName, JSONContainer rootContainer) throws JSONInitializationException {
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
 		
-		return createJSONFileFromBase(baseClass, directory, jsonName, rootContainer);
+		return createJSONFileAs(clazz, directory, jsonName, rootContainer);
 	}
 	
 	/**
@@ -574,30 +590,22 @@ public class JSONFactory {
 	 * @param rootContainer The root of the JSON file to be created (Object or Array)
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createJSONFileFromBase(Class<E> baseClass, Directory directory,
-			String jsonName, @Nullable JSONContainer rootContainer) throws IllegalArgumentException, IOException {
+	public <E extends JSONFile> E createJSONFileAs(Class<E> clazz, Directory directory,
+			String jsonName, JSONContainer rootContainer) throws JSONInitializationException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
-		if (baseClass == null || !(JSONFile.class.isAssignableFrom(baseClass))) {
+		if (clazz == null || !(JSONFile.class.isAssignableFrom(clazz))) {
 			throw new IllegalArgumentException("The base class is not a child of JSONFile.");
 		}
 		
 		try {
 			final String finalName = jsonName.replace(".json", "");
 			
-			if(rootContainer == null ) {
-				final Constructor<E> constructor = baseClass.getConstructor(Directory.class, String.class);
-				return constructor.newInstance(directory, finalName); 
-			}else {
-				final Constructor<E> constructor = baseClass.getConstructor(Directory.class, String.class, JSONContainer.class);
-				return constructor.newInstance(directory, finalName, rootContainer); 
-			}
+			return JSONFile.builder(clazz).directory(directory).name(finalName).base(rootContainer).build();
 
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			final IOException thrownedE = new IOException("Cannot create instance of "+jsonName);
-			thrownedE.addSuppressed(e);
-			throw thrownedE;
+		} catch (SecurityException | IllegalArgumentException e) {
+			throw new JSONInitializationException("Cannot create instance of "+jsonName, e);
 		}
 	}
 	
@@ -618,11 +626,11 @@ public class JSONFactory {
 	 * @param credentials the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException If an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createSecuredJSONFileFromBase(Class<E> baseClass, String directoryID,
-			String jsonName, @Nullable JSONContainer rootContainer, FileCredentials credentials) throws IllegalArgumentException, IOException {
-		return createSecuredJSONFileFromBase(baseClass, getDirectory(directoryID), jsonName, rootContainer, credentials);
+	public <E extends JSONFile> E createSecuredJSONFileAs(Class<E> clazz, String directoryID,
+			String jsonName, JSONContainer rootContainer, FileCredentials credentials) throws JSONInitializationException {
+		return createSecuredJSONFileAs(clazz, getDirectory(directoryID), jsonName, rootContainer, credentials);
 	}
 	
 	/**
@@ -642,15 +650,15 @@ public class JSONFactory {
 	 * @param credentials the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException if an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createSecuredJSONFileFromBase(Class<E> baseClass, Path path,
-			String jsonName, @Nullable JSONContainer rootContainer, FileCredentials credentials) throws IllegalArgumentException, IOException {
+	public <E extends JSONFile> E createSecuredJSONFileAs(Class<E> clazz, Path path,
+			String jsonName, JSONContainer rootContainer, FileCredentials credentials) throws JSONInitializationException {
 		//Create a new directory with the path, doesn't register it
 		//The name of the directory is the last part of the path
 		final Directory directory = new Directory(AUTO_DIRECTORY_NAME+path.getFileName().toString(), path);
 		
-		return createSecuredJSONFileFromBase(baseClass, directory, jsonName, rootContainer, credentials);
+		return createSecuredJSONFileAs(clazz, directory, jsonName, rootContainer, credentials);
 	}
 	
 	/**
@@ -668,32 +676,21 @@ public class JSONFactory {
 	 * @param credentials the credentials if the file will be encrypted
 	 * @return a new instance of JSONFile
 	 * @throws IllegalArgumentException If the base class is not a children of {@link JSONFile}
-	 * @throws IOException if an IO error occurs
+	 * @throws JSONInitializationException If an error occurs while initializing the JSON file
 	 */
-	public <E extends JSONFile> E createSecuredJSONFileFromBase(Class<E> baseClass, Directory directory,
-			String jsonName, @Nullable JSONContainer rootContainer, FileCredentials credentials) throws IllegalArgumentException, IOException {
+	public <E extends JSONFile> E createSecuredJSONFileAs(Class<E> clazz, Directory directory,
+			String jsonName, JSONContainer rootContainer, FileCredentials credentials) throws JSONInitializationException {
 		if(this.directoryManager != null) this.directoryManager.registerNewDirectoryIfAbsent(directory);
-		if (baseClass == null || !(JSONFile.class.isAssignableFrom(baseClass))) {
+		if (clazz == null || !(JSONFile.class.isAssignableFrom(clazz))) {
 			throw new IllegalArgumentException("The base class is not a child of JSONFile.");
 		}
 		
 		try {
 			final String finalName = jsonName.replace(".json", "");
-			if(rootContainer == null) {
-				final Constructor<E> constructor = 
-						baseClass.getConstructor(Directory.class, String.class, FileCredentials.class);
-				
-				return constructor.newInstance(directory, finalName, credentials);
-			}else {
-				final Constructor<E> constructor = 
-						baseClass.getConstructor(Directory.class, String.class, JSONContainer.class, FileCredentials.class);
-				
-				return constructor.newInstance(directory, finalName, rootContainer, credentials);
-			}
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			final IOException thrownedE = new IOException("Cannot create instance of "+jsonName);
-			thrownedE.addSuppressed(e);
-			throw thrownedE;
+			return JSONFile.builder(clazz).directory(directory).name(finalName).base(rootContainer).credentials(credentials).build();
+
+		} catch (SecurityException | IllegalArgumentException e) {
+			throw new JSONInitializationException("Cannot create instance of "+jsonName, e);
 		}
 	}
 
@@ -706,7 +703,7 @@ public class JSONFactory {
 	 * 
 	 * @param stringURL The URL as a string where the date is stored
 	 * @return The container with the data of the JSON File
-	 * @throws IOException
+	 * @throws IOException If the URL is malformed or an IO error occurs
 	 */
 	public JSONContainer getHttpContentAsJSON(String stringURL) throws IOException {
 		return getHttpContentAsJSON(URI.create(stringURL).toURL());
@@ -717,7 +714,7 @@ public class JSONFactory {
 	 * 
 	 * @param url an {@link URL} where the date is stored
 	 * @return The container with the data of the JSON File
-	 * @throws IOException
+	 * @throws IOException If an IO error occurs
 	 */
 	public JSONContainer getHttpContentAsJSON(URL url) throws IOException {
 		JSONContainer result = new JSONObject();
