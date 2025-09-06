@@ -1,4 +1,6 @@
 /.project
+/.settings/
+/.vscode/
 /format_description.md
 /bin/
 
@@ -9,3 +11,5 @@
 build
 /data/
 /logs/
+/.apt_generated/
+/.apt_generated_tests/
