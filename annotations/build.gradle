@@ -1,0 +1,7 @@
+jar {
+    manifest {
+        attributes 'Implementation-Title': "${rootProject.artifact_id}-${project.name}",
+            'Implementation-Version': archiveVersion,
+            'Automatic-Module-Name': 'marshmalliow.annotations'
+    }
+}

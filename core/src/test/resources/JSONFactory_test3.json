@@ -1,0 +1,14 @@
+{
+	"id": 24,
+	"username": "marshmallIOw",
+	"email": "marshmallIOw@example.com",
+    "is_admin": false,
+	"age": 30,
+    "hobbies": ["reading", "gaming", "coding"],
+    "address": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "state": "CA",
+        "zip": "12345"
+    }
+}

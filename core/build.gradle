@@ -1,0 +1,35 @@
+dependencies {
+    implementation project(":annotations")
+    annotationProcessor project(":processors")
+
+    api "org.mariadb:r2dbc-mariadb:$mariadb_version"
+    api 'io.r2dbc:r2dbc-pool:1.0.1.RELEASE'
+    
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
+    implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
+    
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    //  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.2'
+    
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:$junit_version'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:$junit_version'
+	testAnnotationProcessor project(":processors")
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "${rootProject.artifact_id}-${project.name}",
+            'Implementation-Version': archiveVersion,
+            'Automatic-Module-Name': 'marshmalliow.core'
+    }
+}
+
+// sourceJar {
+//     dependsOn project(':core').compileJava
+//     from "build/generated/sources/annotationProcessor/java/main"
+// }

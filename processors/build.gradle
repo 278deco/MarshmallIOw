@@ -1,0 +1,14 @@
+dependencies {
+    implementation project(":annotations")
+    
+    compileOnly 'com.google.auto.service:auto-service:1.1.0'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.0'
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "${rootProject.artifact_id}-${project.name}",
+            'Implementation-Version': archiveVersion,
+            'Automatic-Module-Name': 'marshmalliow.processors'
+    }
+}
