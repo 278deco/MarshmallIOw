@@ -24,101 +24,99 @@ ext {
 }
 
 allprojects {
-	sourceCompatibility = JavaVersion.VERSION_18
-	targetCompatibility = JavaVersion.VERSION_18
+	apply plugin: 'java-library'
+	apply plugin: 'maven-publish'
 	
 	group = group_id
 	version = project_version
 	description = project_description
+
+	java {
+		sourceCompatibility = JavaVersion.VERSION_18
+		targetCompatibility = JavaVersion.VERSION_18
+	}
 	
 	repositories {
 		mavenCentral()
-	}
-	
-	dependencies {
-		api "org.mariadb:r2dbc-mariadb:$mariadb_version"
-		api 'io.r2dbc:r2dbc-pool:1.0.1.RELEASE'
-
-		
-		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
-		// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
-		implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
-		implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
-		
-		// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-		//  implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.2'
-		
-		// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-		// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params
-		testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
-		testImplementation 'org.junit.jupiter:junit-jupiter-params:$junit_version'
-		testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:$junit_version'
-		
+		mavenLocal()
 	}
 	
 	 tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-        options.incremental = true
-    }
-    
-    tasks.withType(Javadoc) {
-    	options.encoding = 'UTF-8'
-    	if(JavaVersion.current().isJava9Compatible()) {
-        	options.addBooleanOption('html5', true)
-    	}
-    	
-    	options.tags = ["todo:X", 'apiNote:a:API Note:', 'implSpec:a:Implementation Requirements:', 'implNote:a:Implementation Note:']
-    }
-    
-    java {
-        withJavadocJar()
-        withSourcesJar()
-    }
-    
-    test {
-    	useJUnitPlatform()
+		options.encoding = 'UTF-8'
+		options.incremental = true
 	}
-    
-    publishing {
-    	publications {
-    		mavenJava(MavenPublication) {
-    			groupId = group_id
-    			artifactId = artifact_id
-    			version = project_version
-    		
-    			from components.java
-    			
-    			pom {
-    				name = 'MarshmallIOw'
-    				description = 'Easy-to-use library handling files for multiple purposes'
-    				url = 'https://github.com/278deco/MarshmallIOw'
-    				licenses {
-    					license {
-    						name = "LGPLv3"
-    						url = "https://github.com/278deco/MarshmallIOw/blob/main/LICENCE"
-    					}
-    				}
-    				developers {
-    					developer {
-    						name = '278deco'
-    					}
-    				}
-    			}
-    			
-    			versionMapping {
-	                usage('java-api') {
-	                    fromResolutionOf('runtimeClasspath')
-	                }
-	                usage('java-runtime') {
-	                    fromResolutionResult()
-	                }
-	            }
-	            
-    		}
-    	}
-    	
-    	
-    	
-    }
-    
+	
+	tasks.withType(Javadoc) {
+		options.encoding = 'UTF-8'
+		if(JavaVersion.current().isJava9Compatible()) {
+			options.addBooleanOption('html5', true)
+		}
+		
+		options.tags = ["todo:X", 'apiNote:a:API Note:', 'implSpec:a:Implementation Requirements:', 'implNote:a:Implementation Note:']
+	}
+	
+	java {
+		withJavadocJar()
+		withSourcesJar()
+	}
+	
+	test {
+		useJUnitPlatform()
+	}
+}
+
+subprojects {
+	base {
+		archivesName = "${artifact_id}-${project.name}"
+	}
+
+	// task.withType(Javadoc).configureEach {
+	// 	title = "${base.archivesName.get()} ${project.version} API"
+	// 	options.windowTitle = title
+	// }
+
+	plugins.withType(JavaPlugin) {
+		publishing {
+			publications {
+				mavenJava(MavenPublication) {
+					from components.java
+
+					afterEvaluate {
+						artifactId = base.archivesName.get()
+					}
+
+					groupId = group_id
+					version = project_version
+				
+					
+					pom {
+						name = 'MarshmallIOw'
+						description = 'Easy-to-use library handling files for multiple purposes'
+						url = 'https://github.com/278deco/MarshmallIOw'
+						licenses {
+							license {
+								name = "LGPLv3"
+								url = "https://github.com/278deco/MarshmallIOw/blob/main/LICENCE"
+							}
+						}
+						developers {
+							developer {
+								name = '278deco'
+							}
+						}
+					}
+					
+					versionMapping {
+						usage('java-api') {
+							fromResolutionOf('runtimeClasspath')
+						}
+						usage('java-runtime') {
+							fromResolutionResult()
+						}
+					}
+					
+				}
+			}
+		}
+	}
 }
