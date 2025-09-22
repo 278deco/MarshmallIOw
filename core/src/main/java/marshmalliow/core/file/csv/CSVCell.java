@@ -1,57 +1,82 @@
 package marshmalliow.core.file.csv;
 
 public class CSVCell implements Comparable<CSVCell> {
-
+	
+	private int posX, posY;
+	
 	private String content;
-	private int index;
 	
-	public CSVCell(final int index) {
-		this.index = index;
-		this.content = "NaN";
+	public CSVCell(int posX, int posY) {
+		this.posX = posX;
+		this.posY = posY;
+		this.content = null;
 	}
 	
-	public CSVCell(final int index, final String content) {
-		this.index = index;
-		this.content = content.trim();
+	public CSVCell(int posX, int posY, String content) {
+		this.posX = posX;
+		this.posY = posY;
+		this.content = content;
 	}
 	
-	public CSVCell(final int index, final int content) {
-		this.index = index;
-		this.content = (""+content).trim();
+	public CSVCell(int posX, int posY, int content) {
+		this(posX, posY, String.valueOf(content));
 	}
 	
-	public CSVCell(final int index, final long content) {
-		this.index = index;
-		this.content = (""+content).trim();
+	public CSVCell(int posX, int posY, long content) {
+		this(posX, posY, String.valueOf(content));
 	}
 	
-	public CSVCell(final int index, final boolean content) {
-		this.index = index;
-		this.content = (""+content).trim();
+	public CSVCell(int posX, int posY, float content) {
+		this(posX, posY, String.valueOf(content));
 	}
 	
-	public int formatInteger() throws NumberFormatException {
+	public CSVCell(int posX, int posY, double content) {
+		this(posX, posY, String.valueOf(content));
+	}
+	
+	public CSVCell(int posX, int posY, boolean content) {
+		this(posX, posY, String.valueOf(content));
+	}
+	
+	public CSVCell(int posX, int posY, Object content) {
+		this(posX, posY, String.valueOf(content));
+	}
+	
+	public String get() {
+		return this.content;
+	}
+	
+	public int getAsInt() throws NumberFormatException {
+		if(this.content == null) throw new NumberFormatException("Content is null");
 		return Integer.parseInt(this.content);
 	}
 	
-	public long formatLong() throws NumberFormatException {
+	public long getAsLong() throws NumberFormatException {
+		if(this.content == null) throw new NumberFormatException("Content is null");
 		return Long.parseLong(this.content);
 	}
 	
-	public double formatDouble() throws NumberFormatException {
+	public double getAsDouble() throws NumberFormatException {
+		if(this.content == null) throw new NumberFormatException("Content is null");
 		return Double.parseDouble(this.content);
 	}
 	
-	public float formatFloat() throws NumberFormatException {
+	public float getAsFloat() throws NumberFormatException {
+		if(this.content == null) throw new NumberFormatException("Content is null");
 		return Float.parseFloat(this.content);
 	}
 	
-	public int getIndex() {
-		return index;
+	public boolean getAsBoolean() throws NullPointerException {
+		if(this.content == null) throw new NullPointerException("Content is null");
+		return Boolean.parseBoolean(this.content);
 	}
 	
-	public String getContent() {
-		return content;
+	public int getPosX() {
+		return this.posX;
+	}
+	
+	public int getPosY() {
+		return this.posY;
 	}
 	
 	public int getSize() {
@@ -60,12 +85,19 @@ public class CSVCell implements Comparable<CSVCell> {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof CSVCell && ((CSVCell)obj).content.equals(this.content);
+		if(obj == null || !(obj instanceof CSVCell)) return false;
+        final CSVCell cell = (CSVCell) obj;
+        return cell.content.equals(this.content) && cell.posX == this.posX && cell.posY == this.posY;
 	}
 
 	@Override
 	public int compareTo(CSVCell o) {
-		return this.getContent().compareTo(o.getContent());
+		return this.get().compareTo(o.get());
+	}
+	
+	@Override
+	public String toString() {
+		return "[X="+posX+",Y="+posY+"] "+content;
 	}
 	
 }
