@@ -39,9 +39,12 @@ public class JSONFile extends AbstractJSONFile {
 		
         public JSONFileBuilder directory(Directory d) { this.directory = d; return this; }
         public JSONFileBuilder directoryId(String id) { this.directoryId = id; return this; }
-        public JSONFileBuilder name(String n) { this.name = n; return this; }
         public JSONFileBuilder base(JSONContainer b) { this.base = b; return this; }
         public JSONFileBuilder credentials(FileCredentials c) { this.credentials = c; return this; }
+        public JSONFileBuilder name(String n) { 
+        	if(!n.toLowerCase().endsWith(FileType.JSON.getExtension())) n += FileType.JSON.getExtension();
+        	this.name = n; return this; 
+        }
 
         @Override
         public JSONFile build() {

@@ -1,10 +1,10 @@
 package marshmalliow.core.file;
 
 public enum FileType {
-	JSON("json"),
-	MOBF("mobf"),
-	PLAIN_TEXT("txt"),
-	CSV("csv"),
+	JSON(".json"),
+	MOBF(".mobf"),
+	PLAIN_TEXT(".txt"),
+	CSV(".csv"),
 	UNKNOWN("");
 	
 	private String extension;

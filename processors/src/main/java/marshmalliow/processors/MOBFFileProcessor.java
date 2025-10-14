@@ -42,13 +42,13 @@ public class MOBFFileProcessor extends AbstractProcessor {
 		final StringBuilder builderClassContent = new StringBuilder();
 		
 		builderClassContent.append("package ").append(packageName).append(";\n\n");
-		builderClassContent.append("import marshmalliow.core.binary.AbstractMOBFFile;\n");
 		builderClassContent.append("import marshmalliow.core.directory.DirectoryRegistry;\n");
 		builderClassContent.append("import marshmalliow.core.directory.Directory;\n");
 		builderClassContent.append("import marshmalliow.core.binary.data.MOBFFileHeader;\n");
 		builderClassContent.append("import marshmalliow.core.binary.registry.DataTypeRegistry;\n");
 		builderClassContent.append("import marshmalliow.core.binary.utils.CompressionType;\n");
 		builderClassContent.append("import marshmalliow.core.binary.AbstractMOBFFileBuilder;\n\n");
+		builderClassContent.append("import marshmalliow.core.file.FileType;\n\n");
 		
 		builderClassContent.append("public class ").append(builderClassName).append(" extends AbstractMOBFFileBuilder<").append(className).append("> {\n");
 		builderClassContent.append("    private final DirectoryRegistry registry;\n");
@@ -56,11 +56,13 @@ public class MOBFFileProcessor extends AbstractProcessor {
 		builderClassContent.append("    private ").append(builderClassName).append("(DirectoryRegistry registry) { this.registry = registry; }\n\n");
 		
 		builderClassContent.append("    public ").append(builderClassName).append(" directory(Directory directory) {\n").append("        this.directory = directory;\n").append("        return this;\n").append("    }\n\n");
-		builderClassContent.append("    public ").append(builderClassName).append(" directoryId(Directory directory) {\n").append("        this.directory = directory;\n").append("        return this;\n").append("    }\n\n");
-		builderClassContent.append("    public ").append(builderClassName).append(" name(String name) {\n").append("        this.name = name;\n").append("        return this;\n").append("    }\n\n");
+		builderClassContent.append("    public ").append(builderClassName).append(" directoryId(String directoryId) {\n").append("        this.directoryId = directoryId;\n").append("        return this;\n").append("    }\n\n");
 		builderClassContent.append("    public ").append(builderClassName).append(" registry(DataTypeRegistry registry) {\n").append("        this.dataTypeRegistry = registry;\n").append("        return this;\n").append("    }\n\n");
 		builderClassContent.append("    public ").append(builderClassName).append(" header(MOBFFileHeader header) {\n").append("        this.header = header;\n").append("        return this;\n").append("    }\n\n");
 		builderClassContent.append("    public ").append(builderClassName).append(" compression(CompressionType compression) {\n").append("        this.compression = compression;\n").append("        return this;\n").append("    }\n\n");
+		builderClassContent.append("    public ").append(builderClassName).append(" name(String n) {\n");
+		builderClassContent.append("        if(!n.toLowerCase().endsWith(FileType.MOBF.getExtension())) n += FileType.MOBF.getExtension();\n");
+		builderClassContent.append("        this.name = n;\n").append("        return this;\n").append("    }\n\n");
 		
 		builderClassContent.append("    public static ").append(builderClassName).append(" builder(DirectoryRegistry registry) {\n").append("        return new ").append(builderClassName).append("(registry);\n").append("    }\n\n");
 		

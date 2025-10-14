@@ -21,8 +21,11 @@ public class TextFile extends AbstractTextFile {
 		
 		public TextFileBuilder directory(Directory d) { this.directory = d; return this; }
 		public TextFileBuilder directoryId(String id) { this.directoryId = id; return this; }
-		public TextFileBuilder name(String n) { this.name = n; return this; }
 		public TextFileBuilder credentials(FileCredentials c) { this.credentials = c; return this; }
+		public TextFileBuilder name(String n) {
+        	if(!n.toLowerCase().endsWith(FileType.PLAIN_TEXT.getExtension())) n += FileType.PLAIN_TEXT.getExtension();
+			this.name = n; return this;
+		}
 
 		@Override
 		public TextFile build() { 

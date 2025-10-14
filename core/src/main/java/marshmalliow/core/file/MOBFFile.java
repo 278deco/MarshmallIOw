@@ -23,10 +23,13 @@ public class MOBFFile extends AbstractMOBFFile {
 		
 		public MOBFFileBuilder directory(Directory d) { this.directory = d; return this; }
 		public MOBFFileBuilder directoryId(String id) { this.directoryId = id; return this; }
-		public MOBFFileBuilder name(String n) { this.name = n; return this; }
 		public MOBFFileBuilder registry(DataTypeRegistry r) { this.dataTypeRegistry = r; return this; }
 		public MOBFFileBuilder header(MOBFFileHeader h) { this.header = h; return this; }
 		public MOBFFileBuilder compression(CompressionType c) { this.compression = c; return this; }
+		public MOBFFileBuilder name(String n) {
+        	if(!n.toLowerCase().endsWith(FileType.MOBF.getExtension())) n += FileType.MOBF.getExtension();
+			this.name = n; return this;
+		}
 		
 		@Override
 		public MOBFFile build() { 

@@ -21,8 +21,11 @@ public class CSVFile extends AbstractCSVFile {
 		
         public CSVFileBuilder directory(Directory d) { this.directory = d; return this; }
         public CSVFileBuilder directoryId(String id) { this.directoryId = id; return this; }
-        public CSVFileBuilder name(String n) { this.name = n; return this; }
         public CSVFileBuilder properties(CSVProperties p) { this.properties = p; return this; }
+        public CSVFileBuilder name(String n) {
+        	if(!n.toLowerCase().endsWith(FileType.CSV.getExtension())) n += FileType.CSV.getExtension();
+        	this.name = n; return this; 
+        }
 
         @Override
         public CSVFile build() {
