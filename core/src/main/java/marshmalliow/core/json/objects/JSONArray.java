@@ -164,35 +164,35 @@ public class JSONArray implements JSONContainer {
 		}
 	}
 	
-	public JSONObject getJSONObject(int index, Object key) {
+	public JSONObject getJSONObject(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof JSONObject) return (JSONObject) value;
 		return null;
 	}
 	
-	public JSONArray getJSONArray(int index, Object key) {
+	public JSONArray getJSONArray(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof JSONArray) return (JSONArray) value;
 		return null;
 	}
 	
-	public String getString(int index, Object key) {
+	public String getString(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof String) return (String) value;
 		return null;
 	}
 	
-	public String getString(int index, Object key, String defaultValue) {
+	public String getString(int index, String defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof String) return (String) value;
 		return defaultValue;
 	}
 	
-	public Integer getInt(int index, Object key) {
+	public Integer getInt(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof Integer) return (Integer) value;
@@ -200,7 +200,7 @@ public class JSONArray implements JSONContainer {
 		return null;
 	}
 	
-	public int getInt(int index, Object key, int defaultValue) {
+	public int getInt(int index, int defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof Integer) return (Integer) value;
@@ -208,7 +208,7 @@ public class JSONArray implements JSONContainer {
 		return defaultValue;
 	}
 	
-	public Long getLong(int index, Object key) {
+	public Long getLong(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof Long) return (Long) value;
@@ -216,7 +216,7 @@ public class JSONArray implements JSONContainer {
 		return null;
 	}
 	
-	public Long getLong(int index, Object key, long defaultValue) {
+	public Long getLong(int index, long defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof Long) return (Long) value;
@@ -224,7 +224,7 @@ public class JSONArray implements JSONContainer {
 		return defaultValue;
 	}
 	
-	public Float getFloat(int index, Object key) {
+	public Float getFloat(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof Float) return (Float) value;
@@ -232,7 +232,7 @@ public class JSONArray implements JSONContainer {
 		return null;
 	}
 	
-	public Float getFloat(int index, Object key, float defaultValue) {
+	public Float getFloat(int index, float defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof Float) return (Float) value;
@@ -240,7 +240,7 @@ public class JSONArray implements JSONContainer {
 		return defaultValue;
 	}
 	
-	public Double getDouble(int index, Object key) {
+	public Double getDouble(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof Double) return (Double) value;
@@ -248,7 +248,7 @@ public class JSONArray implements JSONContainer {
 		return null;
 	}
 	
-	public Double getDouble(int index, Object key, double defaultValue) {
+	public Double getDouble(int index, double defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof Double) return (Double) value;
@@ -256,7 +256,7 @@ public class JSONArray implements JSONContainer {
 		return defaultValue;
 	}
 	
-	public Boolean getBoolean(int index, Object key) {
+	public Boolean getBoolean(int index) {
 		final Object value = list.get(index);
 		if(value == null) return null;
 		if(value instanceof Boolean) return (Boolean) value;
@@ -264,7 +264,7 @@ public class JSONArray implements JSONContainer {
 		return null;
 	}
 	
-	public Boolean getBoolean(int index, Object key, boolean defaultValue) {
+	public Boolean getBoolean(int index, boolean defaultValue) {
 		final Object value = list.get(index);
 		if(value == null) return defaultValue;
 		if(value instanceof Boolean) return (Boolean) value;
