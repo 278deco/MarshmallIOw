@@ -21,10 +21,23 @@ public class LocalDirectory implements Directory {
 	public String id() {
 		return this.id;
 	}
+	
+	@Override
+	public String scheme() {
+		return "file";
+	}
 
 	@Override
 	public URI resolve(String name) {
 		return this.path.resolve(name).toUri();
+	}
+	
+	public Path resolvePath(String name) {
+		return this.path.resolve(name);
+	}
+	
+	public Path path() {
+		return this.path;
 	}
 	
 	@Override

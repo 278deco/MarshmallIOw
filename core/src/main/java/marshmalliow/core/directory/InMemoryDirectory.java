@@ -22,6 +22,11 @@ public class InMemoryDirectory implements Directory {
 	public String id() {
 		return this.id;
 	}
+	
+	@Override
+	public String scheme() {
+		return "memory";
+	}
 
 	@Override
 	public URI resolve(String name) {

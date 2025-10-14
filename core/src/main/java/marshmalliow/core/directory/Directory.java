@@ -8,6 +8,7 @@ import java.net.URI;
 public interface Directory {
 
 	String id();
+	String scheme();
 	
 	/**
 	 * Resolve the given name to a URI inside this directory.
@@ -15,6 +16,7 @@ public interface Directory {
 	 * @return The resolved URI
 	 */
 	URI resolve(String name);
+	
 	
 	InputStream openInputStream(String name) throws IOException;
 	OutputStream openOutputStream(String name) throws IOException;
