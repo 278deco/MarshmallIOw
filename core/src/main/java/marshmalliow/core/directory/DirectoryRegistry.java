@@ -31,6 +31,17 @@ public class DirectoryRegistry {
 		throw new IllegalArgumentException("No provider found for scheme: " + scheme);
 	}
 	
+	public void register(Directory directory) {
+		for(final DirectoryProvider provider : providers) {
+			if(provider.supports(directory.scheme())) {
+				directories.put(directory.id(), directory);
+				return;
+			}
+		}
+		
+		throw new IllegalArgumentException("No provider found supporting this directory's scheme: " + directory.scheme());
+	}
+	
 	public Optional<Directory> get(String id) {
 		return Optional.ofNullable(directories.get(id));
 	}
