@@ -74,6 +74,7 @@ public class AbstractMOBFFile extends AbstractFile {
 					
 					this.root = new ObjectDataType(reader.readUTF(this.fileHeader.getEncodingCharset()));
 					this.root.read(reader, dataTypeRegistry, this.fileHeader.getEncodingCharset());
+					this.hasBeenRead = true; // Mark as read
 				}finally {
 					if(reader != null) reader.close();
 					if(stream != null) stream.close();
