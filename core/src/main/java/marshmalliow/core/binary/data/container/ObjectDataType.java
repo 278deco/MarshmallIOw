@@ -28,10 +28,12 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 	
 	public ObjectDataType() {
 		super("", new LinkedHashMap<String, DataType<?>>());
+		this.isModified.set(false);
 	}
 
 	public ObjectDataType(String name) {
-		super(name, new LinkedHashMap<String, DataType<?>>());	
+		super(name, new LinkedHashMap<String, DataType<?>>());
+		this.isModified.set(false);
 	}
 
 	public ObjectDataType(String name, Map<String, DataType<?>> value) {
@@ -44,7 +46,7 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 			LOCK.writeLock().lock();
 			for(Map.Entry<String, DataType<?>> entry : this.value.entrySet()) {
 				writer.writeByte(entry.getValue().getId());
-				if(entry.getValue().getName().isEmpty()) throw new IOException("Cannot save a Data Type without a name");
+				if(entry.getValue().getName().isEmpty()) throw new IOException("Cannot write a DataType without a name");
 				writer.writeUTF(entry.getValue().getName().get(), charset);
 
 				entry.getValue().write(writer, registry, charset);
@@ -71,15 +73,15 @@ public class ObjectDataType extends DataType<Map<String, DataType<?>>> {
 	
 			while((readByte = reader.readByte()) != DataTypeEnum.NULL.getId()) {
 				final Class<? extends DataType<?>> dataTypeClass = registry.getDataTypeByID(readByte);
-	
-				if(dataTypeClass == null) throw new IOException();
+
+				if(dataTypeClass == null) throw new IOException("Unknown Data Type ID: " + readByte);
 	
 				try {
 					final Constructor<? extends DataType<?>> constructor = dataTypeClass.getDeclaredConstructor();
 	
 					readDataType = constructor.newInstance();
 				} catch (ReflectiveOperationException e) {
-					throw new IOException();
+					throw new IOException("Failed to instantiate Data Type: " + dataTypeClass.getName(), e);
 				}
 	
 				readDataType.setName(reader.readUTF(charset));

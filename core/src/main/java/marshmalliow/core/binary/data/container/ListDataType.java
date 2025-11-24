@@ -26,10 +26,12 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 	
 	public ListDataType() {
 		super("", new ArrayList<T>());
+		this.isModified.set(false);
 	}
 
 	public ListDataType(String name) {
 		super(name, new ArrayList<T>());
+		this.isModified.set(false);
 	}
 
 	public ListDataType(String name, List<T> value) {
@@ -62,7 +64,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 		
 		final ArrayList<T> content = new ArrayList<>();
 		
-		if(dataTypeClass == null) throw new IOException();
+		if(dataTypeClass == null) throw new IOException("Unknown Data Type ID: " + dataTypeId);
 		
 		this.isModified.set(false);
 		
@@ -73,7 +75,7 @@ public class ListDataType<T extends DataType<?>> extends DataType<List<T>> {
 
 				readDataType = constructor.newInstance();
 			} catch (ReflectiveOperationException e) {
-				throw new IOException();
+				throw new IOException("Failed to instantiate Data Type: " + dataTypeClass.getName(), e);
 			}
 
 			readDataType.setName(reader.readUTF(charset));
