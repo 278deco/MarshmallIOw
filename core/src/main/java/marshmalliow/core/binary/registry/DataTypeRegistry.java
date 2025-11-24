@@ -46,8 +46,13 @@ public class DataTypeRegistry {
 	@SuppressWarnings("unchecked")
 	public Class<? extends DataType<?>> getDataTypeByID(byte id) {
 		final Class<? extends RegisteredDataType> result = this.registry.get(id);
-		
-		return result != null && result.isInstance(DataType.class) ? (Class<? extends DataType<?>>) result : null;
+
+		return result != null && DataType.class.isAssignableFrom(result) ? (Class<? extends DataType<?>>) result : null;
+	}
+	
+	@Override
+	public String toString() {
+		return "DataTypeRegistry [registry=" + registry + "]";
 	}
 
 	/**
