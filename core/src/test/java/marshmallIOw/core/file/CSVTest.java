@@ -14,6 +14,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import marshmalliow.core.directory.DirectoryRegistry;
 import marshmalliow.core.directory.GlobalDirectoryRegistry;
 import marshmalliow.core.file.CSVFile;
+import marshmalliow.core.file.ReadMode;
 import marshmalliow.core.file.CSVFile.CSVFileBuilder;
 import marshmalliow.core.file.csv.CSVProperties;
 
@@ -53,7 +54,7 @@ public class CSVTest {
 				.build();
 		
 		assertNotNull(file);
-		assertDoesNotThrow(() -> file.readFile());
+		assertDoesNotThrow(() -> file.readFile(ReadMode.NORMAL));
 	}
 
 }

@@ -22,6 +22,7 @@ import marshmalliow.core.builder.JSONFactory;
 import marshmalliow.core.directory.DirectoryRegistry;
 import marshmalliow.core.directory.GlobalDirectoryRegistry;
 import marshmalliow.core.file.JSONFile;
+import marshmalliow.core.file.ReadMode;
 import marshmalliow.core.file.JSONFile.JSONFileBuilder;
 import marshmalliow.core.json.objects.JSONArray;
 import marshmalliow.core.json.objects.JSONObject;
@@ -101,7 +102,7 @@ public class JSONFactoryTest {
 				.build();
 		
 		assertNotNull(file);
-		assertDoesNotThrow(() -> file.readFile());
+		assertDoesNotThrow(() -> file.readFile(ReadMode.NORMAL));
 		
 		final JSONObject jsonObject = file.getContentAsObject();
 		assertNotNull(jsonObject);
@@ -144,7 +145,7 @@ public class JSONFactoryTest {
 				.build();
 		
 		assertNotNull(file);
-		assertDoesNotThrow(() -> file.readFile());
+		assertDoesNotThrow(() -> file.readFile(ReadMode.NORMAL));
 
 		final JSONObject jsonObject = file.getContentAsObject();
 		assertNull(jsonObject);

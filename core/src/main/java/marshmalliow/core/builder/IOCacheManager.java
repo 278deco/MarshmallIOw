@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import marshmalliow.core.exceptions.FileNotLoadedException;
 import marshmalliow.core.exceptions.IdentifierAlreadyUsedException;
 import marshmalliow.core.file.AbstractFile;
+import marshmalliow.core.file.SaveMode;
 
 /**
  * Cache every Input/Output Object extending {@link AbstractFile} with a simple identifier (id).<br/>
@@ -159,14 +160,14 @@ public class IOCacheManager {
 	/**
 	 * Save all the files present in the cache then attempt to flush it.<br/>
 	 * If a file fails to save correctly, no error is thrown and all non-saved content is lost.
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 */
-	public void saveAndflushCache(boolean forceSave) {
+	public void saveAndflushCache(SaveMode mode) {
 		try {
 			LOCK.writeLock().lock();
 			for(AbstractFile obj : this.files.values()) {
 				try {
-					obj.saveFile(forceSave);
+					obj.saveFile(mode);
 				}catch(IOException e) { }
 			}
 			
@@ -174,14 +175,6 @@ public class IOCacheManager {
 		}finally {
 			LOCK.writeLock().unlock();
 		}
-	}
-	
-	/**
-	 * Save all the files present in the cache then attempt to flush it.<br/>
-	 * If a file fails to save correctly, no error is thrown and all non-saved content is lost.
-	 */
-	public void saveAndflushCache() {
-		saveAndflushCache(false);
 	}
 	
 	/**
@@ -201,15 +194,15 @@ public class IOCacheManager {
 	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
 	 * No check is performed before the removal.
 	 * @param identifier The id of the {@link AbstractFile} object
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @return If the object has been successfully removed
 	 * @throws IOException
 	 * @throws FileNotLoadedException if no file is found with the provided identifier
 	 */
-	public boolean saveAndRemove(String identifier, boolean forceSave) throws IOException {
+	public boolean saveAndRemove(String identifier, SaveMode mode) throws IOException {
 		try {
 			LOCK.writeLock().lock();
-			syncSave(identifier, forceSave);
+			syncSave(identifier, mode);
 			
 			return this.files.remove(identifier) != null;
 		}finally {
@@ -220,31 +213,18 @@ public class IOCacheManager {
 	/**
 	 * Attempt to save an Input/Output object then remove it from the cache.<br/>
 	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
-	 * No check is performed before the removal.
-	 * @param identifier The id of the {@link AbstractFile} object
-	 * @return If the object has been successfully removed
-	 * @throws IOException
-	 * @throws FileNotLoadedException if no file is found with the provided identifier
-	 */
-	public boolean saveAndRemove(String identifier) throws IOException {
-		return saveAndRemove(identifier, false);
-	}
-	
-	/**
-	 * Attempt to save an Input/Output object then remove it from the cache.<br/>
-	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
 	 * The file's name (not the path) is used as the identifier.<br/>
 	 * The method checks if the provided object is equals to the saved one.
 	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @return If the object has been successfully removed
 	 * @throws IOException
 	 * @throws FileNotLoadedException if no file is found with the provided identifier
 	 */
-	public boolean saveAndRemove(AbstractFile obj, boolean forceSave) throws IOException {
+	public boolean saveAndRemove(AbstractFile obj, SaveMode mode) throws IOException {
 		try {
 			LOCK.writeLock().lock();
-			syncSave(obj, forceSave);
+			syncSave(obj, mode);
 			
 			return this.files.remove(obj.getFileName(), obj);
 		}finally {
@@ -255,33 +235,19 @@ public class IOCacheManager {
 	/**
 	 * Attempt to save an Input/Output object then remove it from the cache.<br/>
 	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
-	 * The file's name (not the path) is used as the identifier.<br/>
-	 * The method checks if the provided object is equals to the saved one.
-	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @return If the object has been successfully removed
-	 * @throws IOException
-	 * @throws FileNotLoadedException if no file is found with the provided identifier
-	 */
-	public boolean saveAndRemove(AbstractFile obj) throws IOException {
-		return saveAndRemove(obj, false);
-	}
-	
-	/**
-	 * Attempt to save an Input/Output object then remove it from the cache.<br/>
-	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
 	 * The method checks if the provided object is equals to the saved one.
 	 * @param identifier The id of the {@link AbstractFile} object
 	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @return If the object has been successfully removed
 	 * @throws IOException
 	 * @throws FileNotLoadedException if no file is found with the provided identifier
 	 */
-	public boolean saveAndRemove(String identifier, AbstractFile obj, boolean forceSave) throws IOException {
+	public boolean saveAndRemove(String identifier, AbstractFile obj, SaveMode mode) throws IOException {
 		try {
 			LOCK.writeLock().lock();
 			final AbstractFile storedObj = this.files.get(identifier);
-			if(storedObj != null && storedObj.equals(obj)) storedObj.saveFile(forceSave);
+			if(storedObj != null && storedObj.equals(obj)) storedObj.saveFile(mode);
 			else throw new FileNotLoadedException("File with identifier "+identifier+" hasn't been loaded in this instance");
 			
 			return this.files.remove(identifier, obj);
@@ -290,56 +256,32 @@ public class IOCacheManager {
 		}
 	}
 	
-	/**
-	 * Attempt to save an Input/Output object then remove it from the cache.<br/>
-	 * If a file fails to save correctly, a {@link IOException} is thrown and the file isn't removed from the cache.<br/>
-	 * The method checks if the provided object is equals to the saved one.
-	 * @param identifier The id of the {@link AbstractFile} object
-	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @return If the object has been successfully removed
-	 * @throws IOException
-	 * @throws FileNotLoadedException if no file is found with the provided identifier
-	 */
-	public boolean saveAndRemove(String identifier, AbstractFile obj) throws IOException {
-		return saveAndRemove(identifier, obj, false);
-	}
-	
-	private void syncSave(String identifier, boolean forceSave) throws IOException {
+	private void syncSave(String identifier, SaveMode mode) throws IOException {
 		final AbstractFile obj = this.files.get(identifier);
-		if(obj != null) obj.saveFile(forceSave);
+		if(obj != null) obj.saveFile(mode);
 		else throw new FileNotLoadedException("File with identifier "+identifier+" hasn't been loaded in this instance");
 	}
 	
 	/**
 	 * Attempt to save an Input/Output object
 	 * @param identifier The id of the {@link AbstractFile} object
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @throws IOException
 	 * @throws FileNotLoadedException if no file is found with the provided identifier
 	 */
-	public void save(String identifier, boolean forceSave) throws IOException {
+	public void save(String identifier, SaveMode mode) throws IOException {
 		try {
 			LOCK.readLock().lock();
-			syncSave(identifier, forceSave);
+			syncSave(identifier, mode);
 		}finally {
 			LOCK.readLock().unlock();
 		}
 		
 	}
 	
-	/**
-	 * Attempt to save an Input/Output object
-	 * @param identifier The id of the {@link AbstractFile} object
-	 * @throws IOException
-	 * @throws FileNotLoadedException if no file is found with the provided identifier
-	 */
-	public void save(String identifier) throws IOException {
-		save(identifier, false);
-	}
-	
-	private void syncSave(AbstractFile obj, boolean forceSave) throws IOException {
+	private void syncSave(AbstractFile obj, SaveMode mode) throws IOException {
 		final AbstractFile storedObj = this.files.get(obj.getFileName());
-		if(storedObj != null && storedObj.equals(obj)) storedObj.saveFile(forceSave);
+		if(storedObj != null && storedObj.equals(obj)) storedObj.saveFile(mode);
 		else throw new FileNotLoadedException("File with identifier "+obj.getFileName()+" hasn't been loaded in this instance");
 		
 	}
@@ -348,44 +290,33 @@ public class IOCacheManager {
 	 * Attempt to save an Input/Output object<br/>
 	 * The file's name (not the path) is used as the identifier.
 	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @throws IOException
 	 * @throws FileNotLoadedException if no file is found with the provided identifier
 	 */
-	public void save(AbstractFile obj, boolean forceSave) throws IOException {
+	public void save(AbstractFile obj, SaveMode mode) throws IOException {
 		try {
 			LOCK.readLock().lock();
-			syncSave(obj, forceSave);
+			syncSave(obj, mode);
 		}finally {
 			LOCK.readLock().unlock();
 		}
 	}
 	
 	/**
-	 * Attempt to save an Input/Output object<br/>
-	 * The file's name (not the path) is used as the identifier.
-	 * @param obj The {@link AbstractFile} object to be saved and removed
-	 * @throws IOException
-	 * @throws FileNotLoadedException if no file is found with the provided identifier
-	 */
-	public void save(AbstractFile obj) throws IOException {
-		save(obj, false);
-	}
-	
-	/**
 	 * Attempt to save all files present in the cache.<br/>
 	 * If a file fails to save correctly, is name and path is add to the {@code errorBuffer}. If the errorBuffer contains values, throws {@link IOException}.
-	 * @param forceSave see {@link AbstractFile#saveFile(boolean)} for more information
+	 * @param mode see {@link SaveMode} for more information
 	 * @throws IOException
 	 */
-	public void saveAll(boolean forceSave) throws IOException {
+	public void saveAll(SaveMode mode) throws IOException {
 		try {
 			LOCK.readLock().lock();
 			final StringBuilder errorBuffer = new StringBuilder();
 			
 			for(AbstractFile obj : this.files.values()) {
 				try {
-					obj.saveFile(forceSave);
+					obj.saveFile(mode);
 				}catch(IOException e) {
 					errorBuffer.append(obj.toString()+", ");
 				}
@@ -399,15 +330,6 @@ public class IOCacheManager {
 		}finally {
 			LOCK.readLock().unlock();
 		}
-	}
-	
-	/**
-	 * Attempt to save all files present in the cache.<br/>
-	 * If a file fails to save correctly, is name and path is add to the {@code errorBuffer}. If the errorBuffer contains values, throws {@link IOException}.
-	 * @throws IOException
-	 */
-	public void saveAll() throws IOException {
-		saveAll(false);
 	}
 	
 	/**
