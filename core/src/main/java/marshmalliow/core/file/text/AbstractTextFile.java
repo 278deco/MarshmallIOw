@@ -21,6 +21,10 @@ import javax.crypto.NoSuchPaddingException;
 
 import marshmalliow.core.file.AbstractFile;
 import marshmalliow.core.file.FileType;
+import marshmalliow.core.file.ReadMode;
+import marshmalliow.core.file.ReadResult;
+import marshmalliow.core.file.SaveMode;
+import marshmalliow.core.file.SaveResult;
 import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.security.EncryptionType;
 
@@ -59,10 +63,10 @@ public class AbstractTextFile extends AbstractFile {
 	
 	/**
 	 * Read and add all file's content in a list
-	 * @param forceRead Isn't used in this function
+	 * @param mode The read mode to use. See {@link ReadMode} for more information
 	 */
 	@Override
-	public void readFile(boolean forceRead) throws IOException {
+	public ReadResult readFile(ReadMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are reading from disk
 			
@@ -71,7 +75,7 @@ public class AbstractTextFile extends AbstractFile {
 			final boolean canRead = directory.isReadable(fileName);
 			
 			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
-			if(this.contentModified.get() && !forceRead) {
+			if(this.contentModified.get() && !mode.equals(ReadMode.FORCE)) {
 				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
 			}
 			
@@ -87,8 +91,10 @@ public class AbstractTextFile extends AbstractFile {
 		        }
 				this.hasBeenRead = true; // Mark as read
 				this.contentModified.set(false);
+				return ReadResult.READ;
 			}else if (!exists) {
 				this.hasBeenRead = false; // If the file does not exist, mark as not read
+				return ReadResult.FILE_NOT_FOUND;
 			} else {
 				throw new IOException("The file is not readable or does not exist.");
 			}
@@ -96,10 +102,6 @@ public class AbstractTextFile extends AbstractFile {
 		} finally {
 			lock.writeLock().unlock();
 		}
-	}
-	
-	public void readFile() throws IOException {
-		this.readFile(false);
 	}
 	
 	private BufferedReader determineInputEncryption(InputStream fis) throws IOException {
@@ -132,18 +134,18 @@ public class AbstractTextFile extends AbstractFile {
 	}
 	
 	@Override
-	public void saveFile(boolean forceSave) throws IOException {
+	public SaveResult saveFile(SaveMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are writing to disk
 			
 			final boolean exists = directory.exists(fileName) && directory.size(fileName) > 0;
 			
-			if(!forceSave && exists && !this.hasBeenRead) {
-				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
+			if(!mode.equals(SaveMode.OVERWRITE) && exists && !this.hasBeenRead) {
+				return SaveResult.SKIPPED_NOT_LOADED;
 			}
 			
-			if(!this.contentModified.get() && !forceSave) {
-				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			if(!this.contentModified.get() && !mode.equals(SaveMode.FORCE)) {
+				return SaveResult.SKIPPED_NO_CHANGES;
 			}
 			
 			try(final BufferedWriter writer = determineOutputEncryption(directory.openOutputStream(fileName))) {
@@ -159,13 +161,10 @@ public class AbstractTextFile extends AbstractFile {
 			}
 			
 			this.contentModified.set(false);
+			return SaveResult.SAVED;
 		} finally {
 			lock.writeLock().unlock();
 		}	
-	}
-	
-	public void saveFile() throws IOException {
-		this.saveFile(false);
 	}
 	
 	private BufferedWriter determineOutputEncryption(OutputStream fos) throws IOException {
@@ -202,7 +201,7 @@ public class AbstractTextFile extends AbstractFile {
 	 * If the file is never saved, the line while only be added to this instance of the TextFile
 	 * 
 	 * @param lines One or more lines which needs to added
-	 * @see #saveFile()
+	 * @see #saveFile(SaveMode)
 	 */
 	public void addNewLine(String... lines) {
 		try {
@@ -222,7 +221,7 @@ public class AbstractTextFile extends AbstractFile {
 	 * If the file is never saved, the line while only be added to this instance of the TextFile
 	 * 
 	 * @param lines One or more lines which needs to added
-	 * @see #saveFile()
+	 * @see #saveFile(SaveMode)
 	 */
 	public void addNewLine(List<String> lines) {
 		try {
@@ -242,7 +241,7 @@ public class AbstractTextFile extends AbstractFile {
 	 * If the file is never saved, the line while only be added to this instance of the TextFile
 	 * 
 	 * @param line The line which needs to be added
-	 * @see #saveFile()
+	 * @see #saveFile(SaveMode)
 	 */
 	public void addNewLine(String line) {
 		try {

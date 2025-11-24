@@ -9,6 +9,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import marshmalliow.core.file.AbstractFile;
 import marshmalliow.core.file.FileType;
+import marshmalliow.core.file.ReadMode;
+import marshmalliow.core.file.ReadResult;
+import marshmalliow.core.file.SaveMode;
+import marshmalliow.core.file.SaveResult;
 import marshmalliow.core.io.CSVLexer;
 import marshmalliow.core.io.CSVParser;
 import marshmalliow.core.io.CSVWriter;
@@ -27,7 +31,7 @@ public class AbstractCSVFile extends AbstractFile {
 	}
 
 	@Override
-	public void readFile(boolean forceRead) throws IOException {
+	public ReadResult readFile(ReadMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are reading from disk
 			
@@ -36,7 +40,7 @@ public class AbstractCSVFile extends AbstractFile {
 			final boolean canRead = directory.isReadable(fileName);
 			
 			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
-			if(this.document != null && this.document.isModified() && !forceRead) {
+			if(this.document != null && this.document.isModified() && !mode.equals(ReadMode.FORCE)) {
 				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
 			}
 			
@@ -51,8 +55,10 @@ public class AbstractCSVFile extends AbstractFile {
 		        }
 				this.document.resetModified();
 				this.hasBeenRead = true; // Mark as read
+				return ReadResult.READ;
 			}else if (!exists) {
 				this.hasBeenRead = false; // If the file does not exist, mark as not read
+				return ReadResult.FILE_NOT_FOUND;
 			} else {
 				throw new IOException("The file is not readable or does not exist.");
 			}
@@ -61,24 +67,20 @@ public class AbstractCSVFile extends AbstractFile {
 			lock.writeLock().unlock();
 		}
 	}
-	
-	public void readFile() throws IOException {
-		this.readFile(false);
-	}
 
 	@Override
-	public void saveFile(boolean forceSave) throws IOException {
+	public SaveResult saveFile(SaveMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are writing to disk
 			
 			final boolean exists = directory.exists(fileName) && directory.size(fileName) > 0;
 			
-			if(!forceSave && exists && !this.hasBeenRead) {
-				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
+			if(!mode.equals(SaveMode.OVERWRITE) && exists && !this.hasBeenRead) {
+				return SaveResult.SKIPPED_NOT_LOADED;
 			}
 			
-			if(this.document != null && !this.document.isModified() && !forceSave) {
-				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			if(this.document != null && !this.document.isModified() && !mode.equals(SaveMode.FORCE)) {
+				return SaveResult.SKIPPED_NO_CHANGES;
 			}
 			
 			try(final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(directory.openOutputStream(fileName)))) {
@@ -88,13 +90,10 @@ public class AbstractCSVFile extends AbstractFile {
 				throw new IOException("Failed to write the CSV file: " + e.getMessage(), e);
 			}
 			this.document.resetModified();
+			return SaveResult.SAVED;
 		} finally {
 			lock.writeLock().unlock();
 		}	
-	}
-	
-	public void saveFile() throws IOException {
-		this.saveFile(false);
 	}
 	
 	public CSVDocument getDocument() {

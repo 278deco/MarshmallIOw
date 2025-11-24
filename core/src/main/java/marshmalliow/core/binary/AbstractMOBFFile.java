@@ -17,6 +17,10 @@ import marshmalliow.core.binary.registry.DataTypeRegistry;
 import marshmalliow.core.binary.utils.CompressionType;
 import marshmalliow.core.file.AbstractFile;
 import marshmalliow.core.file.FileType;
+import marshmalliow.core.file.ReadMode;
+import marshmalliow.core.file.ReadResult;
+import marshmalliow.core.file.SaveMode;
+import marshmalliow.core.file.SaveResult;
 import marshmalliow.core.io.BinaryReader;
 import marshmalliow.core.io.BinaryWriter;
 
@@ -40,7 +44,7 @@ public class AbstractMOBFFile extends AbstractFile {
 	}
 	
 	@Override
-	public void readFile(boolean forceRead) throws IOException {
+	public ReadResult readFile(ReadMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are reading from disk
 			
@@ -49,8 +53,8 @@ public class AbstractMOBFFile extends AbstractFile {
 			final boolean canRead = directory.isReadable(this.fileName);
 			
 			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
-			if(this.root.isModified() && !forceRead) {
-				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
+			if(this.root.isModified() && !mode.equals(ReadMode.FORCE)) {
+				return ReadResult.SKIPPED_MODIFIED;
 			}
 			
 			// If the file exists and is readable, we read it
@@ -75,12 +79,14 @@ public class AbstractMOBFFile extends AbstractFile {
 					this.root = new ObjectDataType(reader.readUTF(this.fileHeader.getEncodingCharset()));
 					this.root.read(reader, dataTypeRegistry, this.fileHeader.getEncodingCharset());
 					this.hasBeenRead = true; // Mark as read
+					return ReadResult.READ;
 				}finally {
 					if(reader != null) reader.close();
 					if(stream != null) stream.close();
 				}
 			}else if(!exists) {
 				this.hasBeenRead = false; // If the file does not exist, mark as not read
+				return ReadResult.FILE_NOT_FOUND;
 			}else {
 				throw new IOException("The file is not readable or does not exist.");
 			}
@@ -88,10 +94,6 @@ public class AbstractMOBFFile extends AbstractFile {
 		} finally {
 			lock.writeLock().unlock();
 		}
-	}
-	
-	public void readFile() throws IOException {
-		this.readFile(false);
 	}
 	
 	private InputStream determineInputCompression(BufferedInputStream bis) throws IOException {
@@ -124,19 +126,19 @@ public class AbstractMOBFFile extends AbstractFile {
 	}
 	
 	@Override
-	public void saveFile(boolean forceSave) throws IOException {
+	public SaveResult saveFile(SaveMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // We lock using write lock so nobody can write or read from memory while we are reading from disk
 			
 			final boolean exists = directory.exists(this.fileName) && directory.size(this.fileName) > 0;
 			
-			if(!forceSave && exists && !this.hasBeenRead) {
-				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
+			if(!mode.equals(SaveMode.OVERWRITE) && exists && !this.hasBeenRead) {
+				return SaveResult.SKIPPED_NOT_LOADED;
 			}
 			
 			// If the content has not been modified and we are not forcing a save, we do not save the file again.
-			if(!this.root.isModified() && !forceSave) {
-				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			if(!this.root.isModified() && exists && !mode.equals(SaveMode.FORCE)) {
+				return SaveResult.SKIPPED_NO_CHANGES;
 			}
 			
 			BinaryWriter writer = null;
@@ -151,6 +153,7 @@ public class AbstractMOBFFile extends AbstractFile {
 				writer.writeUTF(this.root.getName().isPresent() ? this.root.getName().get() : "", this.fileHeader.getEncodingCharset());
 				
 				this.root.write(writer, dataTypeRegistry, this.fileHeader.getEncodingCharset());
+				return SaveResult.SAVED;
 			}finally {
 				if(writer != null) {
 					writer.flush();
@@ -164,10 +167,6 @@ public class AbstractMOBFFile extends AbstractFile {
 		} finally {
 			lock.writeLock().unlock();
 		}
-	}
-	
-	public void saveFile() throws IOException {
-		this.saveFile(false);
 	}
 	
 	private OutputStream determineOutputCompression(BufferedOutputStream bis) throws IOException {

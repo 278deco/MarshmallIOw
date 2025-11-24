@@ -17,6 +17,10 @@ import javax.crypto.NoSuchPaddingException;
 
 import marshmalliow.core.file.AbstractFile;
 import marshmalliow.core.file.FileType;
+import marshmalliow.core.file.ReadMode;
+import marshmalliow.core.file.ReadResult;
+import marshmalliow.core.file.SaveMode;
+import marshmalliow.core.file.SaveResult;
 import marshmalliow.core.helpers.SecurityHelper;
 import marshmalliow.core.io.JSONLexer;
 import marshmalliow.core.io.JSONParser;
@@ -55,7 +59,7 @@ public abstract class AbstractJSONFile extends AbstractFile {
 	}
 
 	@Override
-	public final void readFile(boolean forceRead) throws IOException {
+	public final ReadResult readFile(ReadMode mode) throws IOException {
 		try {
 			lock.writeLock().lock(); // Acquire write lock to prevent reads/writes during this operation
 			// Check for the file existence on the disk
@@ -63,7 +67,7 @@ public abstract class AbstractJSONFile extends AbstractFile {
 			final boolean canRead = directory.isReadable(this.fileName);
 						
 			// If the content has been modified and we are not forcing a read, we do not read the file again because it would overwrite the modifications.
-			if(this.content.isModified() && !forceRead) {
+			if(this.content.isModified() && !mode.equals(ReadMode.FORCE)) {
 				throw new IOException("The content has been modified and cannot be read again without forcing a read.");
 			}
 			
@@ -78,18 +82,16 @@ public abstract class AbstractJSONFile extends AbstractFile {
 				}
 				this.hasBeenRead = true; // Mark as read
 				this.content.resetModified(); // Reset the modified state after reading only if no exception occurred
+				return ReadResult.READ;
 			} else if (!exists) {
 				this.hasBeenRead = false; // If the file does not exist, mark as not read
+				return ReadResult.FILE_NOT_FOUND;
 			} else {
 				throw new IOException("The file is not readable or does not exist.");
 			}
 		} finally {
 			lock.writeLock().unlock();
 		}
-	}
-	
-	public final void readFile() throws IOException {
-		this.readFile(false);
 	}
 	
 	private final BufferedReader determineInputEncryption(InputStream fis) throws IOException {
@@ -122,19 +124,19 @@ public abstract class AbstractJSONFile extends AbstractFile {
 	}
 
 	@Override
-	public final void saveFile(boolean forceSave) throws IOException {
+	public final SaveResult saveFile(SaveMode mode) throws IOException {
 		try {
 			lock.readLock().lock(); // Acquire read lock to prevent writes during this operation
 			
 			final boolean exists = directory.exists(this.fileName) && directory.size(this.fileName) > 0;
 			
-			if(!forceSave && exists && !this.hasBeenRead) {
-				throw new IOException("The file has not been read before saving. Please read the file first or force the save.");
+			if(!mode.equals(SaveMode.OVERWRITE) && exists && !this.hasBeenRead) {
+				return SaveResult.SKIPPED_NOT_LOADED;
 			}
 			
 			// If the content has not been modified and we are not forcing a save, we do not save the file again.
-			if(!this.content.isModified() && !forceSave) {
-				throw new IOException("The content has not been modified and cannot be saved again without forcing a save.");
+			if(!this.content.isModified() && !mode.equals(SaveMode.FORCE)) {
+				return SaveResult.SKIPPED_NO_CHANGES;
 			}
 			
 			try(final BufferedWriter writer = determineOutputEncryption(directory.openOutputStream(this.fileName))) {
@@ -144,15 +146,12 @@ public abstract class AbstractJSONFile extends AbstractFile {
 				throw new IOException("Failed to save the JSON file: " + e.getMessage(), e);
 			}
 			this.content.resetModified(); // Reset the modified state after saving only if no exception occurred
+			return SaveResult.SAVED;
 		} finally {
 			lock.readLock().unlock();
-		}
+		}		
 	}
-	
-	public final void saveFile() throws IOException {
-		this.saveFile(false);
-	}
-	
+
 	private final BufferedWriter determineOutputEncryption(OutputStream fos) throws IOException {
 		switch(this.credentials.getType()) {
 			case AES_GCM_TAG_96 -> {

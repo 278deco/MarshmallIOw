@@ -30,8 +30,8 @@ public abstract class AbstractFile {
 		}		
 	}
 
-	public abstract void readFile(boolean forceRead) throws IOException;
-	public abstract void saveFile(boolean forceSave) throws IOException;
+	public abstract ReadResult readFile(ReadMode mode) throws IOException;
+	public abstract SaveResult saveFile(SaveMode mode) throws IOException;
 	
 	public abstract FileType getFileType();
 	
